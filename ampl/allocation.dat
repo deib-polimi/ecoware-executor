@@ -1,0 +1,30 @@
+data;
+
+set I := jboss db;
+set J := vm1 vm2 vm3 vm4;
+
+param c :=
+  jboss 2
+  db 1;
+
+param m :=
+  jboss 1
+  db 2;
+
+param c_max :=
+  vm1 2
+  vm2 1
+  vm3 2
+  vm4 2;
+
+param m_max :=
+  vm1 2
+  vm2 1
+  vm3 2
+  vm4 2;
+
+param p :=
+  vm1 100
+  vm2 100
+  vm3 300
+  vm4 300;

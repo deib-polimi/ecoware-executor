@@ -1,0 +1,6 @@
+model allocation.mod
+data allocation.dat
+option solver cplex;
+solve;
+display x, y, z;
+
