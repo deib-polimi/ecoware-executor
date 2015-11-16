@@ -1,4 +1,7 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import json
 
 topology = {
   'vm1': {
@@ -12,9 +15,11 @@ topology = {
 }
 
 def read_plan():
+  plan = {}
   with open('plan.json', 'r') as f:
     read_data = f.read()
-    print read_data
+    plan = json.loads(read_data)
   f.closed
+  return plan
 
-read_plan()
+print read_plan()
