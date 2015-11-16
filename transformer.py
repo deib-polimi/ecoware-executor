@@ -3,7 +3,9 @@
 
 import json
 from constraint import *
-  
+
+DELIMETER = '_$_'
+
 topology = {
   'vm1': {
     'cpu': 2,
@@ -25,6 +27,10 @@ def read_plan():
 
 def translate():
   plan = read_plan()
+  solutions = solve_csp(plan)
+  print json.dumps(parse_solutions(solutions))
+
+def solve_csp(plan):
   problem = Problem()
   tier_cpu_vars = {}
   tier_mem_vars = {}
@@ -34,8 +40,8 @@ def translate():
     for tier in plan:
       cpu_vars = tier_cpu_vars.setdefault(tier, [])
       mem_vars = tier_mem_vars.setdefault(tier, [])
-      cpu_var = '{}_{}_cpu'.format(vm, tier)
-      mem_var = '{}_{}_mem'.format(vm, tier)
+      cpu_var = '{0}{2}{1}{2}cpu'.format(vm, tier, DELIMETER)
+      mem_var = '{0}{2}{1}{2}mem'.format(vm, tier, DELIMETER)
       
       # variables grouped by VM
       vm_cpu_vars.append(cpu_var)
@@ -59,7 +65,30 @@ def translate():
   for tier, demand in plan.iteritems():
     problem.addConstraint(ExactSumConstraint(demand['cpu']), tier_cpu_vars[tier])
     problem.addConstraint(ExactSumConstraint(demand['mem']), tier_mem_vars[tier])
-  print problem.getSolutions()
+
+  return problem.getSolutions()
+
+def parse_solution(solution):
+  vms = {}
+  for key, value in solution.iteritems():
+    if value == 0: continue
+    arr = key.split(DELIMETER)
+    vm_key = arr[0]
+    vm = vms.setdefault(vm_key, {})
+    tier_key = arr[1]
+    tier = vm.setdefault(tier_key, {})
+    resource = arr[2]
+    if resource == 'cpu':
+      tier['cpu'] = value
+    else:
+      tier['mem'] = value
+  return vms
+
+def parse_solutions(solutions):
+  results = []
+  for solution in solutions:
+    results.append(parse_solution(solution))
+  return results
 
 def main():
   translate()
