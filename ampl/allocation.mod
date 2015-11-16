@@ -25,43 +25,43 @@ param p{J};
 
 # VARS
 # if Tier[i] uses VM[j]
-var z{I, J} >= 0 binary;
+var usage{I, J} >= 0 binary;
 
 # Number of CPU Tier[i] uses in VM[j]
-var x{I, J} >= 0 integer;
+var cpu{I, J} >= 0 integer;
 
 # RAM in GB Tier[i] uses in VM[j]
-var y{I, J} >= 0 integer; 
+var mem{I, J} >= 0 integer; 
 
 
 # OBJECTIVE FUNCTION
 minimize cost:
-  sum{j in J} p[j] * sum{i in I} z[i, j];
+  sum{j in J} p[j] * sum{i in I} usage[i, j];
 
 
 # CONSTRAINTS
 subject to CPU_availability{j in J}:
-  sum{i in I} x[i, j] <= c_max[j];
+  sum{i in I} cpu[i, j] <= c_max[j];
 
 subject to RAM_availability{j in J}:
-  sum{i in I} y[i, j] <= m_max[j];
+  sum{i in I} mem[i, j] <= m_max[j];
 
 subject to CPU_demand{i in I}:
-  sum{j in J} x[i, j] = c[i];
+  sum{j in J} cpu[i, j] = c[i];
 
 subject to RAM_demand{i in I}:
-  sum{j in J} y[i, j] = m[i];
+  sum{j in J} mem[i, j] = m[i];
 
 subject to CPU_activation{i in I, j in J}:
-  c_max[j] * z[i, j] >= x[i, j];
+  c_max[j] * usage[i, j] >= cpu[i, j];
 
 subject to RAM_activation{i in I, j in J}:
-  m_max[j] * z[i, j] >= y[i, j];
+  m_max[j] * usage[i, j] >= mem[i, j];
 
 # not allow usage of RAM, but 0 usage of CPU
 subject to CPU_RAM_activation{i in I, j in J}:
-  c_max[j] * x[i, j] >= y[i, j];
+  c_max[j] * cpu[i, j] >= mem[i, j];
 
 # not allow usage of CPU, but 0 usage of RAM
 subject to RAM_CPU_activation{i in I, j in J}:
-  m_max[j] * y[i, j] >= x[i, j];
+  m_max[j] * mem[i, j] >= cpu[i, j];
