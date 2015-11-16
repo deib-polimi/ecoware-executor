@@ -8,11 +8,11 @@ DELIMETER = '_$_'
 
 topology = {
   'vm1': {
-    'cpu': 2,
+    'cpu_cores': 2,
     'mem': 2
   },
   'vm2': {
-    'cpu': 2,
+    'cpu_cores': 2,
     'mem': 2
   }
 }
@@ -51,7 +51,7 @@ def solve_csp(plan):
       cpu_vars.append(cpu_var)
       mem_vars.append(mem_var)
 
-      problem.addVariable(cpu_var, range(0, limit['cpu'] + 1))
+      problem.addVariable(cpu_var, range(0, limit['cpu_cores'] + 1))
       problem.addVariable(mem_var, range(0, limit['mem'] + 1))
 
       # activation cpu <-> ram
@@ -59,11 +59,11 @@ def solve_csp(plan):
         cpu * 1000 >= mem and mem * 1000 >= cpu, 
         (cpu_var, mem_var))
 
-    problem.addConstraint(MaxSumConstraint(limit['cpu']), vm_cpu_vars)
+    problem.addConstraint(MaxSumConstraint(limit['cpu_cores']), vm_cpu_vars)
     problem.addConstraint(MaxSumConstraint(limit['mem']), vm_mem_vars)
 
   for tier, demand in plan.iteritems():
-    problem.addConstraint(ExactSumConstraint(demand['cpu']), tier_cpu_vars[tier])
+    problem.addConstraint(ExactSumConstraint(demand['cpu_cores']), tier_cpu_vars[tier])
     problem.addConstraint(ExactSumConstraint(demand['mem']), tier_mem_vars[tier])
 
   return problem.getSolutions()
@@ -78,8 +78,8 @@ def parse_solution(solution):
     tier_key = arr[1]
     tier = vm.setdefault(tier_key, {})
     resource = arr[2]
-    if resource == 'cpu':
-      tier['cpu'] = value
+    if resource == 'cpu_cores':
+      tier['cpu_cores'] = value
     else:
       tier['mem'] = value
   return vms
