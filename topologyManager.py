@@ -1,16 +1,18 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import json
+
 class TopologyManager:
   
+  def __init__(self):
+    self.load('topology.json')
+
+  def load(self, filename):
+    with open(filename, 'r') as f:
+      read_data = f.read()
+      self._plan = json.loads(read_data)
+    f.closed
+
   def get_current(self):
-    return {
-      'vm1': {
-        'cpu_cores': 2,
-        'mem': 2
-      },
-      'vm2': {
-        'cpu_cores': 2,
-        'mem': 2
-      }
-    }
+    return self._plan

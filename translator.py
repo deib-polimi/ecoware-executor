@@ -73,9 +73,9 @@ class Translator:
       results.append(self._parse_solution(solution))
     return results
 
-def read_plan():
+def read_plan(filename):
   plan = {}
-  with open('plan.json', 'r') as f:
+  with open(filename, 'r') as f:
     read_data = f.read()
     plan = json.loads(read_data)
   f.closed
@@ -84,9 +84,9 @@ def read_plan():
 def main():
   topology = TopologyManager()
   translator = Translator()
-  plan = read_plan()
+  plan = read_plan('plan.json')
   micro_plan = translator.translate(plan, topology.get_current())
-  print json.dumps(micro_plan)
+  print json.dumps(micro_plan, indent=2)
 
 if __name__ == '__main__':
   main()
