@@ -16,13 +16,10 @@ class TestTranslator(unittest.TestCase):
     plan = read_plan('tests/plan0.json')
     translator = Translator()
     topology = TopologyManager()
-    solutions = translator.translate(plan, topology.get_current())
+    micro_plan = translator.translate(plan, topology.get_current())
     expected_plan = self.read_result('tests/result0.json')
     found = False
-    for solution in solutions:
-      if solution == expected_plan:
-        found = True
-    self.assertTrue(found, 'We should found the solution: ' + json.dumps(expected_plan, indent=4))
+    self.assertEquals(micro_plan, expected_plan)
 
 if __name__ == '__main__':
   unittest.main()

@@ -11,7 +11,18 @@ class Translator:
 
   def translate(self, plan_json, topology):
     solutions = self._solve_csp(plan_json, topology)
-    return self._parse_solutions(solutions)
+    new_allocation = self._parse_solutions(solutions)[0]
+    return self._allocation2plan(new_allocation)
+
+  def _allocation2plan(self, new_allocation):
+    result = []
+    for vm_key in new_allocation:
+      app = new_allocation[vm_key]
+      for app_key in app:
+        demand = app[app_key]
+        result.append('create {0} container in {1} with (cpu={2}, mem={3})'.format(app_key, vm_key, demand['cpu_cores'], demand['mem']))
+    return result
+
 
   def _solve_csp(self, plan, topology):
     problem = Problem()
@@ -72,6 +83,7 @@ class Translator:
     for solution in solutions:
       results.append(self._parse_solution(solution))
     return results
+
 
 def read_plan(filename):
   plan = {}
