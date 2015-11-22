@@ -1,0 +1,5 @@
+[
+  "create jboss container in vm1 with (cpu=1, mem=6)",
+  "set to db container in vm1 (cpu=1, mem=2)",
+  "set to jboss container in vm2 (cpu=1, mem=4)"
+]

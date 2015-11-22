@@ -11,16 +11,39 @@ class Translator:
 
   def translate(self, plan_json, topology):
     solutions = self._solve_csp(plan_json, topology)
-    new_allocation = self._parse_solutions(solutions)[0]
-    return self._allocation2plan(new_allocation)
+    allocations = self._parse_solutions(solutions)
+    if len(allocations) == 0:
+      print "No solutions found"
+      return
+    return self._allocations2plans(allocations, topology)[0]
 
-  def _allocation2plan(self, new_allocation):
+  def _allocations2plans(self, allocations, topology):
+    plans = []
+    for allocation in allocations:
+      plans.append(self._allocation2plan(allocation, topology))
+    return plans
+
+  def _allocation2plan(self, new_allocation, topology):
     result = []
+    for vm_key in topology:
+      if 'used' in topology[vm_key]:
+        used = topology[vm_key]['used']
+        if not vm_key in new_allocation:
+          result.append('delete vm {0}'.format(vm_key))
+        else:
+          for app_key in used:
+            if not app_key in new_allocation[vm_key]:
+              result.append('delete {0} container in {1}'.format(app_key, vm_key))      
+
     for vm_key in new_allocation:
-      app = new_allocation[vm_key]
-      for app_key in app:
-        demand = app[app_key]
-        result.append('create {0} container in {1} with (cpu={2}, mem={3})'.format(app_key, vm_key, demand['cpu_cores'], demand['mem']))
+      if vm_key == 'estimation': continue
+      apps = new_allocation[vm_key]
+      for app_key in apps:
+        demand = apps[app_key]
+        if 'used' in topology[vm_key] and app_key in topology[vm_key]['used']:
+          result.append('set to {0} container in {1} (cpu={2}, mem={3})'.format(app_key, vm_key, demand['cpu_cores'], demand['mem']))
+        else:
+          result.append('create {0} container in {1} with (cpu={2}, mem={3})'.format(app_key, vm_key, demand['cpu_cores'], demand['mem']))
     return result
 
 
