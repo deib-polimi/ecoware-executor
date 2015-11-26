@@ -17,13 +17,13 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 
   def do_POST(self):
-    print 'in post method'
     self.data_string = self.rfile.read(int(self.headers['Content-Length']))
 
     self.send_response(200)
     self.end_headers()
 
     data = json.loads(self.data_string)
+    print data
     translator = Translator()
     topologyManager = TopologyManager()
     actions = translator.translate(data, topologyManager.get_current())

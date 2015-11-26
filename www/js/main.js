@@ -10,6 +10,14 @@ $(document).ready(function() {
       'mem': 2
     }
   };
-  $('#input-plan').val(JSON.stringify(plan, null, 2));
+  $('#plan-area').val(JSON.stringify(plan, null, 2));
+
+  $('#preview-btn').click(function() {
+    var data = $('#plan-area').val();
+    $.post('/', data, function(resp) {
+      var data = JSON.parse(resp);
+      $('#actions-area').val(JSON.stringify(data, null, 2));
+    });
+  });
 
 });
