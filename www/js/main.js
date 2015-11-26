@@ -20,4 +20,8 @@ $(document).ready(function() {
     });
   });
 
+  $.get('/api/topology', function(data) {
+    $('#initial-topology').val(JSON.stringify(data, null, 2));
+  });
+
 });

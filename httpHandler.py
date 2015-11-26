@@ -11,10 +11,12 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def do_GET(self):
     if self.path == '/':
       self.path = '/www/index.html'
+    elif self.path.startswith('/api/'):
+      return self.routing('get')
     else:
       self.path = '/www' + self.path
-
     return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+    
 
   def do_POST(self):
     self.data_string = self.rfile.read(int(self.headers['Content-Length']))
@@ -23,7 +25,6 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     self.end_headers()
 
     data = json.loads(self.data_string)
-    print data
     translator = Translator()
     topologyManager = TopologyManager()
     actions = translator.translate(data, topologyManager.get_current())
@@ -31,6 +32,13 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     self.wfile.write(json.dumps(actions))
     return
 
+  def routing(self, method):
+    self.send_response(200)
+    self.send_header('Content-Type', 'application/json')
+    self.end_headers()
+    if method == 'get' and self.path == '/api/topology':
+      topologyManager = TopologyManager()
+      self.wfile.write(json.dumps(topologyManager.get_current()))
 
 if (__name__ == '__main__'):
   listen_ip = '0.0.0.0'
