@@ -14,14 +14,16 @@ $(document).ready(function() {
 
   $('#preview-btn').click(function() {
     var data = $('#plan-area').val();
-    $.post('/', data, function(resp) {
-      var data = JSON.parse(resp);
-      $('#actions-area').val(JSON.stringify(data, null, 2));
+    $.post('/api/plan/translate', data, function(resp) {
+      $('#actions-area').val(JSON.stringify(resp, null, 2));
+      $.post('/api/plan/preview', data, function(preview) {
+        $('#preview-topology').val(JSON.stringify(preview, null, 2));
+      });
     });
   });
 
   $.get('/api/topology', function(data) {
-    $('#initial-topology').val(JSON.stringify(data, null, 2));
+    $('#current-topology').val(JSON.stringify(data, null, 2));
   });
 
 });

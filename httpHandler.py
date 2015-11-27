@@ -19,26 +19,32 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     
 
   def do_POST(self):
-    self.data_string = self.rfile.read(int(self.headers['Content-Length']))
-
-    self.send_response(200)
-    self.end_headers()
-
-    data = json.loads(self.data_string)
-    translator = Translator()
-    topologyManager = TopologyManager()
-    actions = translator.translate(data, topologyManager.get_current())
-    
-    self.wfile.write(json.dumps(actions))
-    return
+    return self.routing('post')
 
   def routing(self, method):
     self.send_response(200)
     self.send_header('Content-Type', 'application/json')
     self.end_headers()
-    if method == 'get' and self.path == '/api/topology':
+
+    topologyManager = TopologyManager()
+
+    if method == 'get':
+      if self.path == '/api/topology':
+        self.wfile.write(json.dumps(topologyManager.get_current()))
+    elif method == 'post':
+      post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+      post_data = json.loads(post_data_string)
+
+      translator = Translator()
       topologyManager = TopologyManager()
-      self.wfile.write(json.dumps(topologyManager.get_current()))
+      actions = translator.translate(post_data, topologyManager.get_current())
+      if self.path == '/api/plan/translate':
+        string_actions = map(lambda x: x.__str__(), actions)
+        self.wfile.write(json.dumps(string_actions))
+      elif self.path == '/api/plan/preview':
+        preview = topologyManager.preview(actions)
+        self.wfile.write(json.dumps(preview))
+
 
 if (__name__ == '__main__'):
   listen_ip = '0.0.0.0'
