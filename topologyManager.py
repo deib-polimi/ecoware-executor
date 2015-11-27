@@ -31,4 +31,9 @@ class TopologyManager:
         container = used[action.container]
         container['cpu_cores'] = action.cpu
         container['mem'] = action.mem
+      elif action.type == ActionType.delete:
+        if action.container is not None:
+          new_topology[action.vm].pop(action.container)
+        else:
+          new_topology.pop(action.vm)
     return new_topology
