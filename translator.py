@@ -126,8 +126,9 @@ def main():
   translator = Translator()
   plan = read_plan('plan.json')
   actions = translator.translate(plan, topology.get_current())
-  actions = map(lambda x: x.__str__(), actions)
-  print json.dumps(actions, indent=2)
+  string_actions = map(lambda x: x.__str__(), actions)
+  print json.dumps(string_actions, indent=2)
+  print topology.preview(actions)
 
 if __name__ == '__main__':
   main()

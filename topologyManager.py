@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import json
+import copy
+from action import ActionType
 
 class TopologyManager:
   
@@ -11,8 +13,22 @@ class TopologyManager:
   def load(self, filename):
     with open(filename, 'r') as f:
       read_data = f.read()
-      self._plan = json.loads(read_data)
+      self._topology = json.loads(read_data)
     f.closed
 
   def get_current(self):
-    return self._plan
+    return self._topology
+
+  def preview(self, actions):
+    new_topology = copy.deepcopy(self._topology)
+    for action in actions:
+      if action.type == ActionType.create or action.type == ActionType.modify:
+        vm = new_topology[action.vm]
+        used = vm['used'] if 'used' in vm else {}
+        vm['used'] = used
+        if action.type == ActionType.create:
+          used[action.container] = {}
+        container = used[action.container]
+        container['cpu_cores'] = action.cpu
+        container['mem'] = action.mem
+    return new_topology
