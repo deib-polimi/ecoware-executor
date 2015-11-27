@@ -22,6 +22,13 @@ $(document).ready(function() {
     });
   });
 
+  $('#execute-btn').click(function() {
+    var data = $('#plan-area').val();
+    $.post('/api/plan/execute', data, function(resp) {
+      console.log(resp)
+    });
+  });
+
   $.get('/api/topology', function(data) {
     $('#current-topology').val(JSON.stringify(data, null, 2));
   });

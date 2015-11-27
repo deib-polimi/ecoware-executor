@@ -44,7 +44,11 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       elif self.path == '/api/plan/preview':
         preview = topologyManager.preview(actions)
         self.wfile.write(json.dumps(preview))
-
+      elif self.path == '/api/plan/execute':
+        topologyManager.execute(actions)
+        self.wfile.write('{"status": true}')
+      elif self.path == '/api/topology':
+        
 
 if (__name__ == '__main__'):
   listen_ip = '0.0.0.0'

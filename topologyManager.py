@@ -5,6 +5,7 @@ import json
 import copy
 from action import ActionType
 
+
 class TopologyManager:
   
   def __init__(self):
@@ -37,3 +38,7 @@ class TopologyManager:
         else:
           new_topology.pop(action.vm)
     return new_topology
+
+  def execute(self, actions):
+    self._topology = self.preview(actions)
+    return self._topology
