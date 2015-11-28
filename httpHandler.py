@@ -3,16 +3,18 @@
 import SimpleHTTPServer
 import SocketServer
 import json
+import topologyManager
+from traceback import print_exc
 from sys import argv
 from translator import Translator
-from topologyManager import TopologyManager
 
 class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def do_GET(self):
+    body = ''
     if self.path == '/':
       self.path = '/www/index.html'
     elif self.path.startswith('/api/'):
-      return self.routing('get')
+       return self.routing('get')
     else:
       self.path = '/www' + self.path
     return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
@@ -22,33 +24,35 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     return self.routing('post')
 
   def routing(self, method):
-    self.send_response(200)
-    self.send_header('Content-Type', 'application/json')
-    self.end_headers()
 
-    topologyManager = TopologyManager()
+    body = ''
+    try:
+      if method == 'get':
+        if self.path == '/api/topology':
+          body = json.dumps(topologyManager.get_current())
+      elif method == 'post':
+        post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+        post_data = json.loads(post_data_string)
 
-    if method == 'get':
-      if self.path == '/api/topology':
-        self.wfile.write(json.dumps(topologyManager.get_current()))
-    elif method == 'post':
-      post_data_string = self.rfile.read(int(self.headers['Content-Length']))
-      post_data = json.loads(post_data_string)
-
-      translator = Translator()
-      topologyManager = TopologyManager()
-      actions = translator.translate(post_data, topologyManager.get_current())
-      if self.path == '/api/plan/translate':
-        string_actions = map(lambda x: x.__str__(), actions)
-        self.wfile.write(json.dumps(string_actions))
-      elif self.path == '/api/plan/preview':
-        preview = topologyManager.preview(actions)
-        self.wfile.write(json.dumps(preview))
-      elif self.path == '/api/plan/execute':
-        topologyManager.execute(actions)
-        self.wfile.write('{"status": true}')
-      elif self.path == '/api/topology':
-        
+        translator = Translator()
+        actions = translator.translate(post_data, topologyManager.get_current())
+        if self.path == '/api/plan/translate':
+          string_actions = map(lambda x: x.__str__(), actions)
+          body = json.dumps(string_actions)
+        elif self.path == '/api/plan/preview':
+          preview = topologyManager.preview(actions)
+          body = json.dumps(preview)
+        elif self.path == '/api/plan/execute':
+          new_topology = topologyManager.execute(actions)
+          body = json.dumps(new_topology)
+      self.send_response(200)
+      self.send_header('Content-Type', 'application/json')
+      self.end_headers()
+      self.wfile.write(body)
+    except:
+      print "Unexpected error:", sys.exc_info()[0]
+      self.send_response(500)
+      self.end_headers()
 
 if (__name__ == '__main__'):
   listen_ip = '0.0.0.0'

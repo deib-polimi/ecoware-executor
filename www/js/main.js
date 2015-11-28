@@ -25,7 +25,8 @@ $(document).ready(function() {
   $('#execute-btn').click(function() {
     var data = $('#plan-area').val();
     $.post('/api/plan/execute', data, function(resp) {
-      console.log(resp)
+      $('#current-topology').val(JSON.stringify(resp, null, 2));
+      $('#preview-topology').val('');
     });
   });
 

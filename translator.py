@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import json
+import topologyManager
 from constraint import *
-from topologyManager import TopologyManager
 from action import ActionType, Action
 
 DELIMETER = '_$_'
@@ -122,13 +122,12 @@ def read_plan(filename):
   return plan
 
 def main():
-  topology = TopologyManager()
   translator = Translator()
   plan = read_plan('plan.json')
-  actions = translator.translate(plan, topology.get_current())
+  actions = translator.translate(plan, topologyManager.get_current())
   string_actions = map(lambda x: x.__str__(), actions)
   print json.dumps(string_actions, indent=2)
-  print topology.preview(actions)
+  print topologyManager.preview(actions)
 
 if __name__ == '__main__':
   main()
