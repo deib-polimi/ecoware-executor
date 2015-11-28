@@ -32,13 +32,14 @@ $(document).ready(function () {
       $('#current-topology').val(JSON.stringify(resp, null, 2));
       $('#preview-topology').val('');
       toastr.success("Execution succeed!");
+    }).fail(function() {
+      toastr.error("Some error occured");
     });
   });
 
   $.get('/api/topology', function(data) {
     $('#current-topology').val(JSON.stringify(data, null, 2));
+  }).fail(function() {
+    toastr.error("Some error occured");
   });
-
-
-
 });
