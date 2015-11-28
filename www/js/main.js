@@ -1,4 +1,5 @@
-$(document).ready(function() {
+$(document).ready(function () {
+  'use strict';
 
   var plan = {
     'jboss': {
@@ -18,6 +19,9 @@ $(document).ready(function() {
       $('#actions-area').val(JSON.stringify(resp, null, 2));
       $.post('/api/plan/preview', data, function(preview) {
         $('#preview-topology').val(JSON.stringify(preview, null, 2));
+        toastr.success("Plan is built!");
+      }).fail(function() {
+        toastr.error("Some error occured");
       });
     });
   });
@@ -27,11 +31,14 @@ $(document).ready(function() {
     $.post('/api/plan/execute', data, function(resp) {
       $('#current-topology').val(JSON.stringify(resp, null, 2));
       $('#preview-topology').val('');
+      toastr.success("Execution succeed!");
     });
   });
 
   $.get('/api/topology', function(data) {
     $('#current-topology').val(JSON.stringify(data, null, 2));
   });
+
+
 
 });
