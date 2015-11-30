@@ -8,14 +8,12 @@ from action import ActionType
 _topology = {}
 
 def load(filename):
+  global _topology
   data = {}
   with open(filename, 'r') as f:
     read_data = f.read()
-    data = json.loads(read_data)
+    _topology = json.loads(read_data)
   f.closed
-  return data
-
-_topology = load('topology.json')
 
 def get_current():
   return _topology

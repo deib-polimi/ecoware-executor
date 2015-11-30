@@ -1,0 +1,22 @@
+{
+  "vm2": {
+    "mem": 2,
+    "used": {
+      "jboss": {
+        "mem": 1,
+        "cpu_cores": 2
+      }
+    },
+    "cpu_cores": 2
+  },
+  "vm1": {
+    "mem": 2,
+    "used": {
+      "db": {
+        "mem": 2,
+        "cpu_cores": 1
+      }
+    },
+    "cpu_cores": 2
+  }
+}
