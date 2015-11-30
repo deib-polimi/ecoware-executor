@@ -22,7 +22,9 @@ def get_current():
 
 def preview(actions):
   new_topology = copy.deepcopy(_topology)
+  print actions
   for action in actions:
+    print action
     if action.type == ActionType.create or action.type == ActionType.modify:
       vm = new_topology[action.vm]
       used = vm['used'] if 'used' in vm else {}

@@ -31,11 +31,9 @@ class Translator:
         used = topology[vm_key]['used']
         if not vm_key in new_allocation:
           action = Action(ActionType.delete, vm_key)
-          # result.append('delete vm {0}'.format(vm_key))
         else:
           for app_key in used:
             if not app_key in new_allocation[vm_key]:
-              # result.append('delete {0} container in {1}'.format(app_key, vm_key))      
               action = Action(ActionType.delete, vm_key, app_key)
 
     for vm_key in new_allocation:
@@ -44,11 +42,10 @@ class Translator:
       for app_key in apps:
         demand = apps[app_key]
         if 'used' in topology[vm_key] and app_key in topology[vm_key]['used']:
-          result.append('set to {0} container in {1} (cpu={2}, mem={3})'.format(app_key, vm_key, demand['cpu_cores'], demand['mem']))
+          action = Action(ActionType.modify, vm_key, app_key, demand['cpu_cores'], demand['mem'])
         else:
           action = Action(ActionType.create, vm_key, app_key, demand['cpu_cores'], demand['mem'])
           result.append(action)
-          # result.append('create {0} container in {1} with (cpu={2}, mem={3})'.format(app_key, vm_key, demand['cpu_cores'], demand['mem']))
     return result
 
 

@@ -4,6 +4,7 @@ import SimpleHTTPServer
 import SocketServer
 import json
 import topologyManager
+import traceback
 from traceback import print_exc
 from sys import argv
 from translator import Translator
@@ -50,7 +51,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.end_headers()
       self.wfile.write(body)
     except:
-      print "Unexpected error:", sys.exc_info()[0]
+      traceback.print_exc()
       self.send_response(500)
       self.end_headers()
 
