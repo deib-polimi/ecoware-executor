@@ -1,0 +1,5 @@
+[
+ "set \"jboss\" container in \"vm2 virtual machine with cpu_core=1and mem=4gb", 
+ "create \"jboss\" container in \"vm1\" virtual machine with cpu_core=1 and mem=6gb", 
+ "set \"db\" container in \"vm1 virtual machine with cpu_core=1and mem=2gb"
+]
