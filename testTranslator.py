@@ -22,7 +22,6 @@ class TestTranslator(unittest.TestCase):
     result = self.read_json('tests/result1.json')
     self.assertEquals(result.sort(), string_actions.sort())
 
-  @unittest.skip('')
   def test2(self):
     plan = read_plan('tests/plan2.json')
     translator = Translator()
@@ -33,7 +32,6 @@ class TestTranslator(unittest.TestCase):
     print string_actions
     self.assertEquals(result.sort(), actions.sort())
 
-  @unittest.skip('')
   def test_allocation2plan(self):
     allocation = self.read_json('tests/allocation1.0.json')
     topologyManager.load('tests/topology1.json')
