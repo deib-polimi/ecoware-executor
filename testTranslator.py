@@ -13,23 +13,22 @@ class TestTranslator(unittest.TestCase):
     f.closed
     return result
 
-  def test_full_translation(self):
+  def test1(self):
     plan = read_plan('tests/plan1.json')
     translator = Translator()
     topologyManager.load('tests/topology1.json')
     actions = translator.translate(plan, topologyManager.get_current())
-    # not solution
-    self.assertTrue(actions == None)
+    string_actions = map(lambda x: x.__str__(), actions)
+    expected = self.read_json('tests/result1.json')
+    self.assertTrue(actions.sort() == expected.sort())
 
   def test2(self):
     plan = read_plan('tests/plan2.json')
     translator = Translator()
     topologyManager.load('tests/topology2.json')
     actions = translator.translate(plan, topologyManager.get_current())
-
     result = self.read_json('tests/result2.json')
     string_actions = map(lambda x: x.__str__(), actions)
-    print string_actions
     self.assertEquals(result.sort(), actions.sort())
 
   def test_allocation2plan(self):

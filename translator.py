@@ -43,6 +43,7 @@ class Translator:
         demand = apps[app_key]
         if 'used' in topology[vm_key] and app_key in topology[vm_key]['used']:
           action = Action(ActionType.modify, vm_key, app_key, demand['cpu_cores'], demand['mem'])
+          result.append(action)
         else:
           action = Action(ActionType.create, vm_key, app_key, demand['cpu_cores'], demand['mem'])
           result.append(action)

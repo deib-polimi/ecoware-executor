@@ -15,6 +15,8 @@ def load(filename):
     _topology = json.loads(read_data)
   f.closed
 
+load('topology.json')
+
 def get_current():
   return _topology
 
