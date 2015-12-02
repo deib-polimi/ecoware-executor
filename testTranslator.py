@@ -1,6 +1,7 @@
 import unittest
 import json
 import topologyManager
+from os.path import isfile
 from translator import read_plan, Translator
 
 
@@ -13,23 +14,25 @@ class TestTranslator(unittest.TestCase):
     f.closed
     return result
 
-  def test1(self):
-    plan = read_plan('tests/plan1.json')
-    translator = Translator()
-    topologyManager.load('tests/topology1.json')
-    actions = translator.translate(plan, topologyManager.get_current())
-    string_actions = map(lambda x: x.__str__(), actions)
-    expected = self.read_json('tests/result1.json')
-    self.assertTrue(actions.sort() == expected.sort())
-
-  def test2(self):
-    plan = read_plan('tests/plan2.json')
-    translator = Translator()
-    topologyManager.load('tests/topology2.json')
-    actions = translator.translate(plan, topologyManager.get_current())
-    result = self.read_json('tests/result2.json')
-    string_actions = map(lambda x: x.__str__(), actions)
-    self.assertEquals(result.sort(), actions.sort())
+  def test(self):
+    i = 1
+    while True:
+      plan_file = 'tests/plan{0}.json'.format(i)
+      if isfile(plan_file):
+        plan = read_plan(plan_file)
+        translator = Translator()
+        topologyManager.load('tests/topology{0}.json'.format(i))
+        actions = translator.translate(plan, topologyManager.get_current())
+        string_actions = map(lambda x: x.__str__(), actions)
+        expected = self.read_json('tests/result{0}.json'.format(i))
+        string_actions = sorted(string_actions)
+        print plan_file
+        print 'result:', string_actions
+        print 'expected:', expected
+        self.assertTrue(sorted(string_actions) == sorted(expected))        
+      else:
+        break
+      i += 1
 
   def test_allocation2plan(self):
     allocation = self.read_json('tests/allocation1.0.json')

@@ -1,4 +1,1 @@
-[
-  "set to db container in vm1 (cpu=2, mem=2)",
-  "set to jboss container in vm2 (cpu=2, mem=2)"
-]
+["set \"db\" container in \"vm1\" virtual machine cpu_core=1 and mem=2gb", "set \"jboss\" container in \"vm2\" virtual machine cpu_core=2 and mem=1gb"]
