@@ -26,8 +26,9 @@ class TestTranslator(unittest.TestCase):
         string_actions = map(lambda x: x.__str__(), actions)
         expected = self.read_json('tests/result{0}.json'.format(i))
         string_actions = sorted(string_actions)
-        string_actions = sorted(string_actions)
         expected = sorted(expected)
+        # print 'actions=', string_actions
+        # print 'expected=', expected
         self.assertTrue(string_actions == expected)        
       else:
         break

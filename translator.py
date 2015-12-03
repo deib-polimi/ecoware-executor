@@ -59,15 +59,14 @@ class Translator:
               action = Action(ActionType.delete, vm_key, app_key)
 
     for vm_key in new_allocation:
-      if vm_key == 'estimation': continue
       apps = new_allocation[vm_key]
       for app_key in apps:
         demand = apps[app_key]
-        if ('used' in topology[vm_key] and app_key in topology[vm_key]['used']
-          and (topology[vm_key]['used'][app_key]['cpu_cores'] != demand['cpu_cores'] or
-            topology[vm_key]['used'][app_key]['mem'] != demand['mem'])):
-          action = Action(ActionType.modify, vm_key, app_key, demand['cpu_cores'], demand['mem'])
-          result.append(action)
+        if 'used' in topology[vm_key] and app_key in topology[vm_key]['used']:
+          if (topology[vm_key]['used'][app_key]['cpu_cores'] != demand['cpu_cores'] or
+            topology[vm_key]['used'][app_key]['mem'] != demand['mem']):
+            action = Action(ActionType.modify, vm_key, app_key, demand['cpu_cores'], demand['mem'])
+            result.append(action)
         else:
           action = Action(ActionType.create, vm_key, app_key, demand['cpu_cores'], demand['mem'])
           result.append(action)
