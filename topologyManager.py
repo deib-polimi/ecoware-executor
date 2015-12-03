@@ -15,14 +15,14 @@ def load(filename):
     _topology = json.loads(read_data)
   f.closed
 
+load('topology.json')
+
 def get_current():
   return _topology
 
 def preview(actions):
   new_topology = copy.deepcopy(_topology)
-  print actions
   for action in actions:
-    print action
     if action.type == ActionType.create or action.type == ActionType.modify:
       vm = new_topology[action.vm]
       used = vm['used'] if 'used' in vm else {}

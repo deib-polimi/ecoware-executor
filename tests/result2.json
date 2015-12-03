@@ -1,4 +1,1 @@
-[
-  "set to db container in vm1 (cpu=2, mem=2)",
-  "set to jboss container in vm2 (cpu=2, mem=2)"
-]
+[]

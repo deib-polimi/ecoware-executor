@@ -11,12 +11,34 @@ DELIMETER = '_$_'
 class Translator:
 
   def translate(self, plan_json, topology):
-    solutions = self._solve_csp(plan_json, topology)
-    allocations = self._parse_solutions(solutions)
-    if len(allocations) == 0:
-      print "No solutions found"
-      return
-    return self._allocations2plans(allocations, topology)[0]
+    if self.need_solution(plan_json, topology):
+      solutions = self._solve_csp(plan_json, topology)
+      allocations = self._parse_solutions(solutions)
+      if len(allocations) == 0:
+        print "No solutions found"
+        return
+      return self._allocations2plans(allocations, topology)[0]
+    else:
+      return []
+
+  def need_solution(self, plan_json, topology):
+    demand = {}
+    for vm in topology:
+      if 'used' in topology[vm]:
+        for app in topology[vm]['used']:
+          if not app in demand:
+            demand[app] = {}
+            demand[app]['cpu_cores'] = 0
+            demand[app]['mem'] = 0
+          demand[app]['cpu_cores'] += topology[vm]['used'][app]['cpu_cores']
+          demand[app]['mem'] += topology[vm]['used'][app]['mem']
+    for app in plan_json:
+      if (not app in demand or 
+          plan_json[app]['cpu_cores'] != demand[app]['cpu_cores'] or
+          plan_json[app]['mem'] != demand[app]['mem']):
+        return True
+    return False
+
 
   def _allocations2plans(self, allocations, topology):
     plans = []
@@ -41,7 +63,9 @@ class Translator:
       apps = new_allocation[vm_key]
       for app_key in apps:
         demand = apps[app_key]
-        if 'used' in topology[vm_key] and app_key in topology[vm_key]['used']:
+        if ('used' in topology[vm_key] and app_key in topology[vm_key]['used']
+          and (topology[vm_key]['used'][app_key]['cpu_cores'] != demand['cpu_cores'] or
+            topology[vm_key]['used'][app_key]['mem'] != demand['mem'])):
           action = Action(ActionType.modify, vm_key, app_key, demand['cpu_cores'], demand['mem'])
           result.append(action)
         else:

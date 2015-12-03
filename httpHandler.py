@@ -37,6 +37,12 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         translator = Translator()
         actions = translator.translate(post_data, topologyManager.get_current())
+        if actions is None:
+          self.send_response(200)
+          self.send_header('Content-Type', 'application/json')
+          self.end_headers()
+          self.wfile.write('{"error": "No solution found"}')
+          return
         if self.path == '/api/plan/translate':
           string_actions = map(lambda x: x.__str__(), actions)
           body = json.dumps(string_actions)
