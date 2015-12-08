@@ -1,3 +1,3 @@
 [
-  "set \"jboss\" container in \"vm2\" virtual machine cpu_core=2 and mem=2gb"
+  "set 'jboss' container in 'vm2' virtual machine cpu_cores=2.0 and mem=2.0gb"
 ]

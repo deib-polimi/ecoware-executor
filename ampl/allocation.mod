@@ -31,12 +31,12 @@ var usage{I, J} >= 0 binary;
 var cpu{I, J} >= 0 integer;
 
 # RAM in GB Tier[i] uses in VM[j]
-var mem{I, J} >= 0 integer; 
+var mem{I, J} >= 0; 
 
 
 # OBJECTIVE FUNCTION
 minimize cost:
-  sum{j in J} p[j] * sum{i in I} usage[i, j];
+  sum{j in J} (p[j] * sum{i in I} usage[i, j] + sum{i in I} (cpu[i, j] + mem[i, j]));
 
 
 # CONSTRAINTS
@@ -65,3 +65,4 @@ subject to CPU_RAM_activation{i in I, j in J}:
 # not allow usage of CPU, but 0 usage of RAM
 subject to RAM_CPU_activation{i in I, j in J}:
   m_max[j] * mem[i, j] >= cpu[i, j];
+

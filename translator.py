@@ -14,7 +14,6 @@ class Translator:
 
   def translate(self, plan_json, topology):
     if self.need_solution(plan_json, topology):
-      temp = self._solve_ilp(plan_json, topology)
       allocation = self._solve_ilp(plan_json, topology)
       return self._allocation2plan(allocation, topology)
     else:
@@ -38,24 +37,20 @@ class Translator:
         return True
     return False
 
-
-  def _allocations2plans(self, allocations, topology):
-    plans = []
-    for allocation in allocations:
-      plans.append(self._allocation2plan(allocation, topology))
-    return plans
-
   def _allocation2plan(self, new_allocation, topology):
     result = []
     for vm_key in topology:
       if 'used' in topology[vm_key]:
         used = topology[vm_key]['used']
         if not vm_key in new_allocation:
-          action = Action(ActionType.delete, vm_key)
+          for app_key in used:
+            action = Action(ActionType.delete, vm_key, app_key)
+            result.append(action)
         else:
           for app_key in used:
             if not app_key in new_allocation[vm_key]:
               action = Action(ActionType.delete, vm_key, app_key)
+              result.append(action)
 
     for vm_key in new_allocation:
       apps = new_allocation[vm_key]
@@ -73,76 +68,85 @@ class Translator:
 
 
   def _solve_ilp(self, plan, topology):
-    solver = pywraplp.Solver('Solver', pywraplp.Solver.GLOP_LINEAR_PROGRAMMING)
+    solver = pywraplp.Solver('Solver', pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
 
     # variables
-    used = {}
+    usage = {}
     cpu = {}
     mem = {}
-    M = 10000 # infinity
-    MIN_RAM = 0.5
+    # MIN_RAM = 0.5
     for vm in topology:
       cpu[vm] = {}
       mem[vm] = {}
-      used[vm] = {}
+      usage[vm] = {}
       for tier in plan:
         cpu[vm][tier] = solver.IntVar(0, solver.infinity(), 'cpu_{0}_{1}'.format(vm, tier))
         mem[vm][tier] = solver.NumVar(0, solver.infinity(), 'mem_{0}_{1}'.format(vm, tier))
-        used[vm][tier] = solver.BoolVar('usage_{0}_{1}'.format(vm, tier))
+        usage[vm][tier] = solver.BoolVar('used_{0}_{1}'.format(vm, tier))
 
     # minimize number of used VMs
     objective = solver.Objective()
     for vm in topology:
       for tier in plan:
-        objective.SetCoefficient(cpu[vm][tier], 1)
-        objective.SetCoefficient(mem[vm][tier], 1)
-        objective.SetCoefficient(used[vm][tier], 1)
+        if 'used' in topology[vm]:
+          k1 = 10
+          if tier in topology[vm]['used']:
+            k2 = 1
+          else:
+            k2 = 2
+        else:
+          k1 = 20
+          k2 = 3
+        objective.SetCoefficient(cpu[vm][tier], k2)
+        objective.SetCoefficient(mem[vm][tier], k2)
+        objective.SetCoefficient(usage[vm][tier], k1)
     objective.SetMinimization()
 
     for vm in topology:
-      cpu_availability = solver.Constraint(-solver.infinity(), 0)
-      for tier in cpu[vm]:
-        cpu_availability.SetCoefficient(cpu[vm][tier], 1)
-        cpu_availability.SetCoefficient(used[vm][tier], -topology[vm]['cpu_cores'])
-
-      mem_availability = solver.Constraint(-solver.infinity(), 0)
-      for tier in mem[vm]:
-        mem_availability.SetCoefficient(mem[vm][tier], 1)
-        mem_availability.SetCoefficient(used[vm][tier], -topology[vm]['mem'])
-
-    for tier in plan:
-      cpu_demand = solver.Constraint(plan[tier]['cpu_cores'], plan[tier]['cpu_cores'])
-      for vm in cpu:
-        cpu_demand.SetCoefficient(cpu[vm][tier], 1)
-
-      mem_demand = solver.Constraint(plan[tier]['mem'], plan[tier]['mem'])
-      for vm in mem:
-        mem_demand.SetCoefficient(mem[vm][tier], 1)
-
-    for vm in topology:
+      cpu_availability = solver.Constraint(0, topology[vm]['cpu_cores'])
+      mem_availability = solver.Constraint(0, topology[vm]['mem'])
       for tier in plan:
+        cpu_availability.SetCoefficient(cpu[vm][tier], 1)
+
+        mem_availability.SetCoefficient(mem[vm][tier], 1)
+
+        used_cpu_activation = solver.Constraint(0, solver.infinity())
+        used_cpu_activation.SetCoefficient(cpu[vm][tier], -1)
+        used_cpu_activation.SetCoefficient(usage[vm][tier], topology[vm]['cpu_cores'])
+
+        used_mem_activation = solver.Constraint(0, solver.infinity())
+        used_mem_activation.SetCoefficient(mem[vm][tier], -1)
+        used_mem_activation.SetCoefficient(usage[vm][tier], topology[vm]['mem'])
+
         cpu_ram_activation = solver.Constraint(0, solver.infinity())
         cpu_ram_activation.SetCoefficient(mem[vm][tier], -1)
-        cpu_ram_activation.SetCoefficient(cpu[vm][tier], M)
+        cpu_ram_activation.SetCoefficient(cpu[vm][tier], topology[vm]['mem'])
 
         ram_cpu_activation = solver.Constraint(0, solver.infinity())
         ram_cpu_activation.SetCoefficient(cpu[vm][tier], -1)
-        ram_cpu_activation.SetCoefficient(mem[vm][tier], M)
+        ram_cpu_activation.SetCoefficient(mem[vm][tier], topology[vm]['cpu_cores'])
 
-        min_ram = solver.Constraint(0, solver.infinity())
-        min_ram.SetCoefficient(mem[vm][tier], 1)
-        min_ram.SetCoefficient(used[vm][tier], -MIN_RAM)
+        # min_ram = solver.Constraint(0, solver.infinity())
+        # min_ram.SetCoefficient(mem[vm][tier], 1)
+        # min_ram.SetCoefficient(used[vm][tier], -MIN_RAM)
+      
+    for tier in plan:
+      cpu_demand = solver.Constraint(plan[tier]['cpu_cores'], plan[tier]['cpu_cores'])
+      mem_demand = solver.Constraint(plan[tier]['mem'], plan[tier]['mem'])
+      for vm in topology:
+        cpu_demand.SetCoefficient(cpu[vm][tier], 1)
+        mem_demand.SetCoefficient(mem[vm][tier], 1)
 
     status = solver.Solve()
     allocation = {}
     for vm in topology:
       for tier in plan:
-        if used[vm][tier].solution_value() > 0:
+        # print '{0}={1} cpu={2} mem={3}'.format(usage[vm][tier], usage[vm][tier].solution_value(), cpu[vm][tier].solution_value(), mem[vm][tier].solution_value())
+        if usage[vm][tier].solution_value() > 0:
           allocation.setdefault(vm, {})
           allocation[vm].setdefault(tier, {})
           allocation[vm][tier]['cpu_cores'] = cpu[vm][tier].solution_value()
           allocation[vm][tier]['mem'] = mem[vm][tier].solution_value()
-
     return allocation
 
 def read_plan(filename):
@@ -158,8 +162,9 @@ def main():
   plan = read_plan('plan.json')
   actions = translator.translate(plan, topologyManager.get_current())
   string_actions = map(lambda x: x.__str__(), actions)
+  print 'plan=', plan
+  print 'topology=', topologyManager.get_current()
   print json.dumps(string_actions, indent=2)
-  print topologyManager.preview(actions)
 
 if __name__ == '__main__':
   main()
