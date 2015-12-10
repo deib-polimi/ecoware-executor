@@ -36,24 +36,29 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       elif method == 'post':
         post_data_string = self.rfile.read(int(self.headers['Content-Length']))
         post_data = json.loads(post_data_string)
-
-        translator = Translator()
-        actions = translator.translate(post_data, topologyManager.get_current())
-        if actions is None:
-          self.send_response(200)
-          self.send_header('Content-Type', 'application/json')
-          self.end_headers()
-          self.wfile.write('{"error": "No solution found"}')
-          return
-        if self.path == '/api/plan/translate':
-          string_actions = map(lambda x: x.__str__(), actions)
-          body = json.dumps(string_actions)
-        elif self.path == '/api/plan/preview':
-          preview = topologyManager.preview(actions)
-          body = json.dumps(custom_sort(preview))
-        elif self.path == '/api/plan/execute':
-          new_topology = topologyManager.execute(actions)
-          body = json.dumps(custom_sort(new_topology))
+        if self.path == '/api/topology':
+          topologyManager.set(post_data)
+          body = '{}'
+        else:
+          translator = Translator()
+          actions = translator.translate(post_data, topologyManager.get_current())
+          if actions is None:
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write('{"error": "No solution found"}')
+            return          
+          elif self.path == '/api/plan/translate':
+            string_actions = map(lambda x: x.__str__(), actions)
+            body = json.dumps(string_actions)
+          elif self.path == '/api/plan/preview':
+            actions = translator.translate(post_data, topologyManager.get_current())
+            preview = topologyManager.preview(actions)
+            body = json.dumps(custom_sort(preview))
+          elif self.path == '/api/plan/execute':
+            actions = translator.translate(post_data, topologyManager.get_current())
+            new_topology = topologyManager.execute(actions)
+            body = json.dumps(custom_sort(new_topology))
       self.send_response(200)
       self.send_header('Content-Type', 'application/json')
       self.end_headers()

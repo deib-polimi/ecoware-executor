@@ -43,3 +43,7 @@ def execute(actions):
   global _topology
   _topology = preview(actions)
   return _topology
+
+def set(new_topology):
+  global _topology
+  _topology = new_topology
