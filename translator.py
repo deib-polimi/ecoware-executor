@@ -15,6 +15,8 @@ class Translator:
   def translate(self, plan_json, topology):
     if self.need_solution(plan_json, topology):
       allocation = self._solve_ilp(plan_json, topology)
+      if not allocation:
+        return None
       return self._allocation2plan(allocation, topology)
     else:
       return []
