@@ -83,24 +83,21 @@ class Translator:
       usage[vm] = {}
       for tier in plan:
         cpu[vm][tier] = solver.IntVar(0, solver.infinity(), 'cpu_{0}_{1}'.format(vm, tier))
-        mem[vm][tier] = solver.NumVar(0, solver.infinity(), 'mem_{0}_{1}'.format(vm, tier))
+        mem[vm][tier] = solver.IntVar(0, solver.infinity(), 'mem_{0}_{1}'.format(vm, tier))
         usage[vm][tier] = solver.BoolVar('used_{0}_{1}'.format(vm, tier))
 
-    # minimize number of used VMs
     objective = solver.Objective()
     for vm in topology:
       for tier in plan:
+        weight = 5 # w(vm_use)
         if 'used' in topology[vm]:
-          k1 = 10
           if tier in topology[vm]['used']:
-            k2 = 1
+            weight = 1 # w(container_set)
           else:
-            k2 = 2
+            
         else:
           k1 = 20
           k2 = 3
-        objective.SetCoefficient(cpu[vm][tier], k2)
-        objective.SetCoefficient(mem[vm][tier], k2)
         objective.SetCoefficient(usage[vm][tier], k1)
     objective.SetMinimization()
 

@@ -1,5 +1,5 @@
 model allocation.mod
-data allocation.dat
+data allocation1.dat
 option solver cplex;
 solve;
 display cpu, mem, usage;

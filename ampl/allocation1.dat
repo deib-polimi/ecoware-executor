@@ -1,7 +1,7 @@
 data;
 
 set I := jboss db;
-set J := vm1 vm2;
+set J := vm1 vm2 vm3;
 
 param c :=
   jboss 3
@@ -14,11 +14,13 @@ param m :=
 param c_max :=
   vm1 2
   vm2 2
+  vm3 2
   ;
 
 param m_max :=
   vm1 2
   vm2 2
+  vm3 2
   ;
 
 # param p :=
