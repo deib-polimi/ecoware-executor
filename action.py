@@ -4,9 +4,10 @@
 from enum import Enum
 
 class ActionType(Enum):
-    create = 1
-    modify = 2
-    delete = 3
+    vm_create = 1
+    container_create = 2
+    container_set = 3
+    container_delete = 4
 
 class Action:
   def __init__(self, type, vm, container=None, cpu=None, mem=None):
@@ -17,9 +18,11 @@ class Action:
     self.mem = mem
 
   def __str__(self):
-    if self.type == ActionType.create:
+    if self.type == ActionType.vm_create:
+      return "create virtual machine '{0}' with cpu_cores={1} and mem={2}gb".format(self.vm, self.cpu, self.mem)
+    elif self.type == ActionType.container_create:
       return "create '{0}' container in '{1}' virtual machine with cpu_cores={2} and mem={3}gb".format(self.container, self.vm, self.cpu, self.mem)
-    elif self.type == ActionType.modify:
+    elif self.type == ActionType.container_set:
       return "set '{0}' container in '{1}' virtual machine cpu_cores={2} and mem={3}gb".format(self.container, self.vm, self.cpu, self.mem)
-    elif self.type == ActionType.delete:
+    elif self.type == ActionType.container_delete:
       return "delete '{0}' container from '{1}' virtual machine".format(self.container, self.vm)
