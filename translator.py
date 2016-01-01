@@ -106,6 +106,8 @@ class Translator:
       start = time.time()
       solutions = self._solve_csp(plan_json, topology)
       print 'solver: size={}; time={}sec'.format(len(solutions), time.time() - start)
+      if len(solutions) == 0:
+        raise Exception('No solution found')
       best = None
       best_estimation = sys.maxint
       start = time.time()
@@ -188,7 +190,8 @@ class Translator:
     for tier, demand in plan.iteritems():
       problem.addConstraint(ExactSumConstraint(demand['cpu_cores']), tier_cpu_vars[tier])
       problem.addConstraint(ExactSumConstraint(demand['mem']), tier_mem_vars[tier])
-    return problem.getSolutions()
+    solutions = problem.getSolutions()
+    return solutions
 
 
 def read_plan(filename):
