@@ -75,7 +75,7 @@ class Translator:
         points += allocation[vm][tier]['mem'] * WEIGHT['mem_use']
     return points
 
-  def _2plan(self, topology, allocation):
+  def _2plan(self, allocation, topology):
     points = 0
     actions = []
     for vm in allocation:
@@ -86,8 +86,8 @@ class Translator:
       else:
         for tier in allocation[vm]:
           if tier in topology[vm]['used']:
-            if (topology[vm]['used']['cpu_cores'] == allocation[vm][tier]['cpu_cores']
-                  and topology[vm]['used']['mem'] == allocation[vm][tier]['mem']):
+            if (topology[vm]['used'][tier]['cpu_cores'] == allocation[vm][tier]['cpu_cores']
+                  and topology[vm]['used'][tier]['mem'] == allocation[vm][tier]['mem']):
                 pass
             else:
               actions.append(Action(ActionType.container_set, vm, tier, allocation[vm][tier]['cpu_cores'], allocation[vm][tier]['mem']))
@@ -114,7 +114,7 @@ class Translator:
       for solution in solutions:
         allocation = self._2allocation(topology, solution)
         estimation = self._estimate(topology, allocation)
-        plan = self._2plan(topology, allocation)
+        plan = self._2plan(allocation, topology)
         estimated.append([estimation, allocation, plan])
       estimated = sorted(estimated, key=lambda x: x[0])
       actions = estimated[0][2]
