@@ -17,8 +17,6 @@ WEIGHT = {
   'container_create': 8,
   'vm_delete': 20,
   'vm_create': 30,
-  'cpu_use': 2,
-  'mem_use': 2,
   'vm_use': 25
 }
 
@@ -72,9 +70,6 @@ class Translator:
             points += WEIGHT['container_delete']
     for vm in allocation:
       points += WEIGHT['vm_use']
-      for tier in allocation[vm]:
-        points += allocation[vm][tier]['cpu_cores'] * WEIGHT['cpu_use']
-        points += allocation[vm][tier]['mem'] * WEIGHT['mem_use']
     return points
 
   def _2plan(self, allocation, topology):
@@ -104,9 +99,6 @@ class Translator:
             points += WEIGHT['container_delete']
     for vm in allocation:
       points += WEIGHT['vm_use']
-      for tier in allocation[vm]:
-        points += allocation[vm][tier]['cpu_cores'] * WEIGHT['cpu_use']
-        points += allocation[vm][tier]['mem'] * WEIGHT['mem_use']
     return actions
 
   def translate(self, plan_json, topology):
@@ -122,6 +114,7 @@ class Translator:
         estimation = self._estimate(topology, allocation)
         if estimation < best_estimation:
           best = allocation
+          best_estimation = estimation
       print 'search best: time={}sec'.format(time.time() - start)
       def comparator(action0, action1):
         def action2order(action):
@@ -193,8 +186,8 @@ class Translator:
       problem.addConstraint(MaxSumConstraint(limit['mem']), vm_mem_vars)
 
     for tier, demand in plan.iteritems():
-      problem.addConstraint(MinSumConstraint(demand['cpu_cores']), tier_cpu_vars[tier])
-      problem.addConstraint(MinSumConstraint(demand['mem']), tier_mem_vars[tier])
+      problem.addConstraint(ExactSumConstraint(demand['cpu_cores']), tier_cpu_vars[tier])
+      problem.addConstraint(ExactSumConstraint(demand['mem']), tier_mem_vars[tier])
     return problem.getSolutions()
 
 
