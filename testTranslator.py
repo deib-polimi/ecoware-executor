@@ -19,23 +19,18 @@ class TestTranslator(unittest.TestCase):
     while True:
       plan_file = 'tests/plan{0}.json'.format(i)
       if isfile(plan_file):
-        try:
-          plan = read_plan(plan_file)
-          translator = Translator()
-          topologyManager.load('tests/topology{0}.json'.format(i))
-          actions = translator.translate(plan, topologyManager.get_current())
-          string_actions = map(lambda x: x.__str__(), actions)
-          expected = self.read_json('tests/result{0}.json'.format(i))
-          print i
-          print 'topology=', topologyManager.get_current()
-          print 'plan=', plan
-          print 'actions=', string_actions
-          print 'expected=', expected
-          self.assertEquals(string_actions, expected)
-        except Exception as e:
-          if i == 6 and e.__str__() == 'No solution found':
-            print i
-            print 'No solution found'
+        plan = read_plan(plan_file)
+        translator = Translator()
+        topologyManager.load('tests/topology{0}.json'.format(i))
+        actions = translator.translate(plan, topologyManager.get_current())
+        string_actions = map(lambda x: x.__str__(), actions)
+        expected = self.read_json('tests/result{0}.json'.format(i))
+        print i
+        print 'topology=', topologyManager.get_current()
+        print 'plan=', plan
+        print 'actions=', string_actions
+        print 'expected=', expected
+        self.assertEquals(string_actions, expected)
       else:
         break
       i += 1
@@ -48,6 +43,20 @@ class TestTranslator(unittest.TestCase):
     string_actions = map(lambda x: x.__str__(), actions)
     result = self.read_json('tests/result1.0.json')
     self.assertEquals(sorted(string_actions), sorted(result))
+
+  def test_no_solution(self):
+    plan_file = 'tests/plan_no_sol.json'
+    try:
+      plan = read_plan(plan_file)
+      translator = Translator()
+      topologyManager.load('tests/topology_no_sol.json')
+      actions = translator.translate(plan, topologyManager.get_current())
+      self.AssertTrue(False)
+    except Exception as e:
+      if e.__str__() == 'No solution found':
+        print 'No solution found'
+      else:
+        raise e
 
 if __name__ == '__main__':
   unittest.main()
