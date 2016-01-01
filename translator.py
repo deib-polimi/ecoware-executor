@@ -140,35 +140,6 @@ class Translator:
         return True
     return False
 
-  def _allocation2plan(self, new_allocation, topology):
-    result = []
-    for vm_key in topology:
-      if 'used' in topology[vm_key]:
-        used = topology[vm_key]['used']
-        if not vm_key in new_allocation:
-          for app_key in used:
-            action = Action(ActionType.delete, vm_key, app_key)
-            result.append(action)
-        else:
-          for app_key in used:
-            if not app_key in new_allocation[vm_key]:
-              action = Action(ActionType.delete, vm_key, app_key)
-              result.append(action)
-
-    for vm_key in new_allocation:
-      apps = new_allocation[vm_key]
-      for app_key in apps:
-        demand = apps[app_key]
-        if 'used' in topology[vm_key] and app_key in topology[vm_key]['used']:
-          if (topology[vm_key]['used'][app_key]['cpu_cores'] != demand['cpu_cores'] or
-            topology[vm_key]['used'][app_key]['mem'] != demand['mem']):
-            action = Action(ActionType.modify, vm_key, app_key, demand['cpu_cores'], demand['mem'])
-            result.append(action)
-        else:
-          action = Action(ActionType.create, vm_key, app_key, demand['cpu_cores'], demand['mem'])
-          result.append(action)
-    return result
-
   def _solve_csp(self, plan, topology):
     problem = Problem()
     tier_cpu_vars = {}
