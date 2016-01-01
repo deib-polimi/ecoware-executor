@@ -54,8 +54,8 @@ class Translator:
       else:
         for tier in allocation[vm]:
           if tier in topology[vm]['used']:
-            if (topology[vm]['used']['cpu_cores'] == allocation[vm][tier]['cpu_cores']
-                  and topology[vm]['used']['mem'] == allocation[vm][tier]['mem']):
+            if (topology[vm]['used'][tier]['cpu_cores'] == allocation[vm][tier]['cpu_cores']
+                  and topology[vm]['used'][tier]['mem'] == allocation[vm][tier]['mem']):
                 pass
             else:
               points += WEIGHT['container_set']
