@@ -23,20 +23,21 @@ def get_current():
 def preview(actions):
   new_topology = copy.deepcopy(_topology)
   for action in actions:
-    if action.type == ActionType.create or action.type == ActionType.modify:
-      vm = new_topology[action.vm]
-      used = vm['used'] if 'used' in vm else {}
-      vm['used'] = used
-      if action.type == ActionType.create:
-        used[action.container] = {}
-      container = used[action.container]
+    if action.type == ActionType.vm_create:
+      new_topology[action.vm]['used'] = {}
+    elif action.type == ActionType.container_create:
+      container = {}
       container['cpu_cores'] = action.cpu
       container['mem'] = action.mem
-    elif action.type == ActionType.delete:
-      if action.container is not None:
-        new_topology[action.vm].pop(action.container)
-      else:
+      new_topology[action.vm]['used'][action.container] = container
+    elif action.type == ActionType.container_set:
+      container = new_topology[action.vm]['used'][action.container]
+      container['cpu_cores'] = action.cpu
+      container['mem'] = action.mem
+    elif action.type == ActionType.vm_delete:
         new_topology.pop(action.vm)
+    elif action.type == ActionType.container_delete:
+      new_topology[action.vm].pop(action.container)
   return new_topology
 
 def execute(actions):
