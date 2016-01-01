@@ -1,4 +1,6 @@
 [
-  "create 'db' container in 'vm2' virtual machine with cpu_cores=2.0 and mem=2.0gb",
-  "create 'jboss' container in 'vm1' virtual machine with cpu_cores=3.0 and mem=2.0gb"
+  "create virtual machine 'vm2' with cpu_cores=4 and mem=8gb", 
+  "create virtual machine 'vm1' with cpu_cores=4 and mem=8gb", 
+  "create 'jboss' container in 'vm2' virtual machine with cpu_cores=3 and mem=2gb", 
+  "create 'db' container in 'vm1' virtual machine with cpu_cores=2 and mem=2gb"
 ]
