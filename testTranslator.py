@@ -25,8 +25,6 @@ class TestTranslator(unittest.TestCase):
         actions = translator.translate(plan, topologyManager.get_current())
         string_actions = map(lambda x: x.__str__(), actions)
         expected = self.read_json('tests/result{0}.json'.format(i))
-        string_actions = sorted(string_actions)
-        expected = sorted(expected)
         print i
         print 'topology=', topologyManager.get_current()
         print 'plan=', plan

@@ -5,9 +5,10 @@ from enum import Enum
 
 class ActionType(Enum):
     vm_create = 1
-    container_create = 2
-    container_set = 3
-    container_delete = 4
+    vm_delete = 2
+    container_create = 3
+    container_set = 4
+    container_delete = 5
 
 class Action:
   def __init__(self, type, vm, container=None, cpu=None, mem=None):

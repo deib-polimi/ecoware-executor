@@ -117,7 +117,20 @@ class Translator:
         plan = self._2plan(allocation, topology)
         estimated.append([estimation, allocation, plan])
       estimated = sorted(estimated, key=lambda x: x[0])
-      actions = estimated[0][2]
+      def comparator(action0, action1):
+        def action2order(action):
+          if action.type == ActionType.vm_delete or action.type == ActionType.container_delete:
+            return 0 
+          elif action.type == ActionType.container_set:
+            return 1
+          elif action.type == ActionType.vm_create:
+            return 2
+          else:
+            return 3
+        action0 = action2order(action0)
+        action1 = action2order(action1)
+        return action0 - action1
+      actions = sorted(estimated[0][2], comparator)
       return actions
     else:
       return []
