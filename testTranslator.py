@@ -33,6 +33,7 @@ class TestTranslator(unittest.TestCase):
         print 'actions=', string_actions
         print 'expected=', expected
         self.assertEquals(string_actions, expected)        
+        return
       else:
         break
       i += 1

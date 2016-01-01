@@ -1,5 +1,4 @@
 [
-  "set 'jboss' container in 'vm2' virtual machine cpu_cores=1.0 and mem=8.0gb", 
-  "create 'jboss' container in 'vm1' virtual machine with cpu_cores=1.0 and mem=2.0gb", 
-  "set 'db' container in 'vm1' virtual machine cpu_cores=1.0 and mem=2.0gb"
+  "set 'db' container in 'vm1' virtual machine cpu_cores=1 and mem=2gb", 
+  "create 'jboss' container in 'vm1' virtual machine with cpu_cores=1 and mem=5gb"
 ]
