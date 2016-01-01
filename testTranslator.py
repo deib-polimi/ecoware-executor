@@ -30,8 +30,8 @@ class TestTranslator(unittest.TestCase):
         print 'plan=', plan
         print 'actions=', string_actions
         print 'expected=', expected
-        self.assertEquals(string_actions, expected)        
-        if i == 3:
+        self.assertEquals(string_actions, expected) 
+        if i == 4:
           return
       else:
         break

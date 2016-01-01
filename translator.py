@@ -92,7 +92,7 @@ class Translator:
             actions.append(Action(ActionType.container_create, vm, tier, allocation[vm][tier]['cpu_cores'], allocation[vm][tier]['mem']))
     for vm in topology:
       if not vm in allocation:
-        points += WEIGHT['container_delete']
+        actions.append(Action(ActionType.vm_delete, vm))
       elif 'used' in topology[vm]:
         for tier in topology[vm]['used']:
           if not tier in allocation[vm]:

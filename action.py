@@ -21,6 +21,8 @@ class Action:
   def __str__(self):
     if self.type == ActionType.vm_create:
       return "create virtual machine '{0}' with cpu_cores={1} and mem={2}gb".format(self.vm, self.cpu, self.mem)
+    elif self.type == ActionType.vm_delete:
+      return "delete virtual machine '{0}'".format(self.vm)
     elif self.type == ActionType.container_create:
       return "create '{0}' container in '{1}' virtual machine with cpu_cores={2} and mem={3}gb".format(self.container, self.vm, self.cpu, self.mem)
     elif self.type == ActionType.container_set:

@@ -1,7 +1,7 @@
 [
-  "set 'jboss' container in 'vm4' virtual machine cpu_cores=2.0 and mem=2.0gb",
-  "set 'db' container in 'vm2' virtual machine cpu_cores=2.0 and mem=2.0gb",
-  "delete 'jboss' container from 'vm1' virtual machine",
-  "delete 'db' container from 'vm1' virtual machine",
-  "delete 'jboss' container from 'vm3' virtual machine"
+  "delete virtual machine 'vm4'", 
+  "delete virtual machine 'vm5'", 
+  "delete virtual machine 'vm1'", 
+  "set 'db' container in 'vm2' virtual machine cpu_cores=2 and mem=2gb", 
+  "set 'jboss' container in 'vm3' virtual machine cpu_cores=2 and mem=2gb"
 ]
