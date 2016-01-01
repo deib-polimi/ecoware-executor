@@ -5,6 +5,8 @@ import json
 import topologyManager
 from constraint import *
 from action import ActionType, Action
+import time
+import sys
 
 
 DELIMETER = '_$_'
@@ -109,14 +111,18 @@ class Translator:
 
   def translate(self, plan_json, topology):
     if self.need_solution(plan_json, topology):
+      start = time.time()
       solutions = self._solve_csp(plan_json, topology)
-      estimated = []
+      print 'solver: size={}; time={}sec'.format(len(solutions), time.time() - start)
+      best = None
+      best_estimation = sys.maxint
+      start = time.time()
       for solution in solutions:
         allocation = self._2allocation(topology, solution)
         estimation = self._estimate(topology, allocation)
-        plan = self._2plan(allocation, topology)
-        estimated.append([estimation, allocation, plan])
-      estimated = sorted(estimated, key=lambda x: x[0])
+        if estimation < best_estimation:
+          best = allocation
+      print 'search best: time={}sec'.format(time.time() - start)
       def comparator(action0, action1):
         def action2order(action):
           if action.type == ActionType.vm_delete or action.type == ActionType.container_delete:
@@ -130,7 +136,8 @@ class Translator:
         action0 = action2order(action0)
         action1 = action2order(action1)
         return action0 - action1
-      actions = sorted(estimated[0][2], comparator)
+      plan = self._2plan(best, topology)
+      actions = sorted(plan, comparator)
       return actions
     else:
       return []
@@ -188,7 +195,6 @@ class Translator:
     for tier, demand in plan.iteritems():
       problem.addConstraint(MinSumConstraint(demand['cpu_cores']), tier_cpu_vars[tier])
       problem.addConstraint(MinSumConstraint(demand['mem']), tier_mem_vars[tier])
-
     return problem.getSolutions()
 
 
