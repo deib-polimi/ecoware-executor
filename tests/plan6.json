@@ -1,0 +1,10 @@
+{
+  "jboss": {
+    "cpu_cores": 2,
+    "mem": 1
+  },
+  "db": {
+    "cpu_cores": 1,
+    "mem": 2
+  }
+}

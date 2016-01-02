@@ -5,6 +5,7 @@ import json
 import topologyManager
 from constraint import *
 from action import ActionType, Action
+from math import ceil
 import time
 import sys
 
@@ -91,12 +92,13 @@ class Translator:
           else:
             actions.append(Action(ActionType.container_create, vm, tier, allocation[vm][tier]['cpu_cores'], allocation[vm][tier]['mem']))
     for vm in topology:
-      if not vm in allocation:
-        actions.append(Action(ActionType.vm_delete, vm))
-      elif 'used' in topology[vm]:
-        for tier in topology[vm]['used']:
-          if not tier in allocation[vm]:
-            points += WEIGHT['container_delete']
+      if 'used' in topology[vm]:
+        if not vm in allocation:
+          actions.append(Action(ActionType.vm_delete, vm))
+        else:
+          for tier in topology[vm]['used']:
+            if not tier in allocation[vm]:
+              points += WEIGHT['container_delete']
     for vm in allocation:
       points += WEIGHT['vm_use']
     return actions
@@ -155,7 +157,34 @@ class Translator:
         return True
     return False
 
+  def _init_vm(self, plan, topology):
+    demand_cpu = 0
+    demand_mem = 0
+    for tier in plan:
+      demand_cpu += plan[tier]['cpu_cores']
+      demand_mem += plan[tier]['mem']
+    vm_count = len(topology)
+    # hardcoded vm aws m4.large
+    vm_cpu = 2
+    vm_mem = 8
+    resources_cpu = vm_cpu * vm_count
+    resources_mem = vm_mem * vm_count
+    if demand_cpu > resources_cpu or demand_mem > resources_mem:
+      vm_add_count = int(ceil(max(1.0 *(demand_cpu - resources_cpu) / vm_cpu, 1.0 * (demand_mem - resources_mem) / vm_mem)))
+      for i in range(0, vm_add_count):
+        j = len(topology)
+        while 'vm{}'.format(j) in topology:
+          j += 1
+        topology['vm{}'.format(j)] = {
+          'cpu_cores': vm_cpu,
+          'mem': vm_mem
+        }
+    print topology
+    return topology
+
+
   def _solve_csp(self, plan, topology):
+    topology = self._init_vm(plan, topology)
     problem = Problem()
     tier_cpu_vars = {}
     tier_mem_vars = {}

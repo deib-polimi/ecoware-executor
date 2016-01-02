@@ -1,0 +1,6 @@
+[
+  "create virtual machine 'vm0' with cpu_cores=2 and mem=8gb",
+  "create virtual machine 'vm1' with cpu_cores=2 and mem=8gb",
+  "create 'db' container in 'vm0' virtual machine with cpu_cores=1 and mem=2gb",
+  "create 'jboss' container in 'vm1' virtual machine with cpu_cores=2 and mem=1gb"
+]

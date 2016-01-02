@@ -11,7 +11,8 @@
   },
   "vm5": {
     "mem": 3,
-    "cpu_cores": 2
+    "cpu_cores": 2,
+    "used": {}
   },
   "vm2": {
     "mem": 3,
