@@ -5,3 +5,4 @@ README.html
 .vagrant
 .workspace
 nohup.out
+*.swp
