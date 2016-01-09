@@ -8,7 +8,8 @@ Vagrant.configure("2") do |config|
     d.run "n43jl/docker-set",
       args: "-it --privileged --name=docker-set"
     d.pull_images "n43jl/swarm-set"
+    config.vm.provision :shell, path: "bootstrap.sh"
   end
-  config.vm.provision :shell, path: "bootstrap.sh"
+  config.vm.network "forwarded_port", guest: 2376, host: 5000
 end
 
