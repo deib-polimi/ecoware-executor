@@ -3,7 +3,9 @@
 import translator
 import topologyManager
 import vagrantExecutor as vagrant
+import dockerExecutor as docker
 from action import ActionType
+
 
 import json
 import logging
@@ -11,6 +13,9 @@ import logging
 def execute(action):
   if action.type == ActionType.vm_create:
     vagrant.create_vm(action.vm, action.cpu, action.mem)
+  elif action.type == ActionType.container_create:
+    docker.create_container(action.vm, action.container, action.cpu, action.mem)
+  logging.info('Executed {}'.format(action.__str__()))
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO)

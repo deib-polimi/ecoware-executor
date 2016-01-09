@@ -11,13 +11,16 @@ work_dir = '.workspace/executor/vms'
 port = 5000
 vms = {}
 
+def get_docker_port(vm):
+  return vms.get(vm)
+
 def modify_vagrant_file(txt, cpu, mem, port):
   lines = txt.split('\n')
   for i in range(0, len(lines)):
     if lines[i].find('v.cpus') is not -1:
       lines[i] = '    v.cpus = {}'.format(cpu)
     elif lines[i].find('v.memory') is not -1:
-      lines[i] = '    v.memory = {}'.format(mem)
+      lines[i] = '    v.memory = {}'.format(mem * 1000) # gb to mb
     elif lines[i].find('config.vm.network "forwarded_port"') is not -1:
       lines[i] = '  config.vm.network "forwarded_port", guest: 2376, host: {}'.format(port)
   return '\n'.join(lines)
