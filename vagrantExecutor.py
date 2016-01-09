@@ -5,6 +5,7 @@ import os
 import errno
 import shutil
 import time
+import logging
 
 work_dir = '.workspace/executor/vms'
 port = 5000
@@ -46,12 +47,13 @@ def create_vm(vm_name, cpu, mem):
   os.chdir(path)
   try:
     cmd = 'time vagrant up'
-    print subprocess.check_call(cmd.split())
+    logging.info('vagrant up; exit code={}'.format(subprocess.check_call(cmd.split())))
   finally:
     os.chdir(cwd)
+  logging.info('VM {} (cpu={}, mem={}, docker_port={}) is up'.format(vm_name, cpu, mem, vms[vm_name]))
 
 if __name__ == '__main__':
+  logging.basicConfig(level=logging.INFO)
   create_vm('vm1', 1, 1024)
   create_vm('vm2', 1, 1024)
-  print vms
-  print 'finished'
+  
