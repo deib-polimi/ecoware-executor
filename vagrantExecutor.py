@@ -36,7 +36,6 @@ def create_vm(vm_name, cpu, mem):
   shutil.copy('virtualization/vagrant/docker', path)
   with open('virtualization/vagrant/Vagrantfile') as vagrant_file:
     txt = vagrant_file.read()
-  print vms.values(), port
   while port in vms.values():
     port = port + 1
   vms[vm_name] = port
