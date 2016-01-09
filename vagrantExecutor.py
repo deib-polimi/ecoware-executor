@@ -33,6 +33,7 @@ def create_vm(vm_name, cpu, mem):
       pass
     else: raise
   shutil.copy('virtualization/vagrant/bootstrap.sh', path)
+  shutil.copy('virtualization/vagrant/docker', path)
   with open('virtualization/vagrant/Vagrantfile') as vagrant_file:
     txt = vagrant_file.read()
   print vms.values(), port
