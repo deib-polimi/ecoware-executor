@@ -12,7 +12,16 @@ port = 5000
 vms = {}
 
 def get_docker_port(vm):
-  return vms.get(vm)
+  return vms.get(vm)[0]
+
+def get_cpu_counter(vm):
+  return vms.get(vm)[1]
+
+def set_cpu_counter(vm, new_value):
+  vms.get(vm)[1] = new_value
+
+def get_cpu_limit(vm):
+  return vms.get(vm)[2]
 
 def modify_vagrant_file(txt, cpu, mem, port):
   lines = txt.split('\n')
@@ -42,7 +51,8 @@ def create_vm(vm_name, cpu, mem):
     txt = vagrant_file.read()
   while port in vms.values():
     port = port + 1
-  vms[vm_name] = port
+  cpu_round_robin = 0
+  vms[vm_name] = [port, cpu_round_robin, cpu]
   txt = modify_vagrant_file(txt, cpu, mem, port)
   with open('{}/{}'.format(path, 'Vagrantfile'), 'w') as f:
     f.write(txt)
@@ -53,7 +63,7 @@ def create_vm(vm_name, cpu, mem):
     logging.info('vagrant up; exit code={}'.format(subprocess.check_call(cmd.split())))
   finally:
     os.chdir(cwd)
-  logging.info('VM {} (cpu={}, mem={}, docker_port={}) is up'.format(vm_name, cpu, mem, vms[vm_name]))
+  logging.info('VM {} (cpu={}, mem={}, docker_port={}) is up'.format(vm_name, cpu, mem, vms[vm_name][0]))
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO)
