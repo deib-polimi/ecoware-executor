@@ -7,9 +7,21 @@ import shutil
 import time
 import logging
 import time
+import sqlite3
 
 work_dir = '.workspace/executor/vms'
 vms = {}
+
+conn = sqlite3.connect('executor.db')
+try:
+  for row in conn.execute('select * from vm'):
+    vms[row[1]] = {
+      'docker_port': row[4],
+      'free_cpu': range(0, row[2]),
+      'taken_cpu': []
+    }
+finally:
+  conn.close()
 
 def get_docker_port(vm):
   global vms
@@ -75,6 +87,12 @@ def create_vm(vm_name, cpu, mem):
     subprocess.check_call(cmd.split())
   finally:
     os.chdir(cwd)
+  conn = sqlite3.connect('executor.db')
+  try:
+    conn.execute("insert into vm (name, cpu, mem, docker_port) values ('{}', {}, {}, {})".format(vm_name, cpu, mem, port))
+    conn.commit()
+  finally:
+    conn.close()
   logging.info('VM {}:{} (cpu={}, mem={}) is up; time={}s'.format(vm_name, port, cpu, mem, time.time() - start))
 
 def delete_vm(vm):
@@ -88,14 +106,20 @@ def delete_vm(vm):
     subprocess.check_call(cmd.split())
   finally:
     os.chdir(cwd)
-  vm_data= vms[vm]
+  vm_data = vms[vm]
   del vms[vm]
+  conn = sqlite3.connect('executor.db')
+  try:
+    conn.execute("delete from vm where name = '{}'".format(vm))
+    conn.commit()
+  finally:
+    conn.close()
   logging.info('VM {}:{} is deleted; time={}s'.format(vm, vm_data['docker_port'], time.time() - start))
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO)
   create_vm('vm1', 1, 1)
   create_vm('vm2', 1, 1)
-  # delete_vm('vm1')
-  # delete_vm('vm2')
+  delete_vm('vm1')
+  delete_vm('vm2')
   
