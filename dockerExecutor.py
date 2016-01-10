@@ -39,7 +39,6 @@ def create_container(vm, app, cpu, mem):
 def set_container(vm, app, cpu, mem):
   global containers
   port = vagrant.get_docker_port(vm)
-  image = get_image(app)
   prev_cpuset = containers.get(vm).get(app)
   prev_cpu_list = map(int, prev_cpuset.split(','))
   for i in prev_cpu_list:
@@ -48,11 +47,23 @@ def set_container(vm, app, cpu, mem):
   cmd = 'docker -H :{} exec -it docker-set docker set --cpuset-cpus={} -m={}g {}'.format(port, cpuset, mem, app)
   exit_code = subprocess.check_call(cmd.split())
   containers[vm][app] = cpuset
-  logging.info('vm={}:{}; docker set -cpuset={} -m={}g {}; exit code={}'.format(vm, port, cpuset, mem, image, exit_code))
+  logging.info('vm={}:{}; docker set -cpuset={} -m={}g {}; exit code={}'.format(vm, port, cpuset, mem, app, exit_code))
+
+def rm_container(vm, app):
+  global containers
+  port = vagrant.get_docker_port(vm)
+  cmd = 'docker -H :{} exec -it docker-set docker rm -f {}'.format(port, app)
+  exit_code = subprocess.check_call(cmd.split())
+  cpuset = containers.get(vm).get(app)
+  cpu_list = map(int, cpuset.split(','))
+  for i in cpu_list:
+    vagrant.free_cpu(vm, i)
+  logging.info('vm={}:{}; docker rm {}'.format(vm, port, app))
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
   vagrant.create_vm('vm2', 2, 2)
   create_container('vm2', 'jboss', 2, 2)
   set_container('vm2', 'jboss', 1, 1)
+  rm_container('vm2', 'jboss')
 

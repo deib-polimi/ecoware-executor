@@ -15,6 +15,10 @@ def execute(action):
     vagrant.create_vm(action.vm, action.cpu, action.mem)
   elif action.type == ActionType.container_create:
     docker.create_container(action.vm, action.container, action.cpu, action.mem)
+  elif action.type == ActionType.container_set:
+    docker.set_container(action.vm, action.container, action.cpu, action.mem)
+  elif action.type == ActionType.container_delete:
+    docker.delete_container(action.vm, action.container)
   logging.info('Executed {}'.format(action.__str__()))
 
 if __name__ == '__main__':
