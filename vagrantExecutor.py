@@ -105,7 +105,7 @@ def delete_vm(vm):
   os.chdir(path)
   try:
     cmd = 'vagrant destroy -f'
-    subprocess.check_call(cmd.split())
+    subprocess.check_csall(cmd.split())
   finally:
     os.chdir(cwd)
   vm_data = vms[vm]
@@ -120,8 +120,8 @@ def delete_vm(vm):
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
-  # create_vm('vm1', 1, 1)
-  # create_vm('vm2', 1, 1)
+  # create_vm('vm1', 2, 2)
+  # create_vm('vm2', 2, 2)
   # delete_vm('vm1')
   # delete_vm('vm2')
   

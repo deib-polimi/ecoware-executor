@@ -35,6 +35,6 @@ if __name__ == '__main__':
   string_actions = map(lambda x: x.__str__(), actions)
   print 'plan=', plan
   print 'topology=', topologyManager.get_current()
-  # print json.dumps(string_actions, indent=2)
+  print json.dumps(string_actions, indent=2)
   for action in actions:
     execute(action)

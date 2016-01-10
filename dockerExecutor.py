@@ -105,7 +105,7 @@ def rm_container(vm, app):
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
-  # vagrant.create_vm('vm2', 2, 2)
+  vagrant.create_vm('vm2', 2, 2)
   create_container('vm2', 'jboss', 2, 2)
   set_container('vm2', 'jboss', 1, 1)
   rm_container('vm2', 'jboss')

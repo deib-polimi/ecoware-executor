@@ -3,9 +3,34 @@
 
 import json
 import copy
+import sqlite3
+import logging
+
 from action import ActionType
 
 _topology = {}
+
+conn = sqlite3.connect('executor.db')
+try:
+  vm_ids = {}
+  for row in conn.execute('select * from vm'):
+    _topology[row[1]] = {
+      'cpu_cores': row[2],
+      'mem': row[3]
+    }
+    vm_ids[row[0]] = row[1]
+  for row in conn.execute('select * from container'):
+    vm = vm_ids[row[1]]
+    _topology[vm]['used'] = {}
+    cpuset = row[3]
+    cpu = len(cpuset.split(','))
+    _topology[vm]['used'][row[2]] = {
+      'cpu_cores': cpu,
+      'mem': row[4]
+    }
+  logging.debug('topology={}'.format(_topology))  
+finally:
+  conn.close()    
 
 def load(filename):
   global _topology
@@ -14,8 +39,6 @@ def load(filename):
     read_data = f.read()
     _topology = json.loads(read_data)
   f.closed
-
-load('topology.json')
 
 def get_current():
   return _topology
@@ -27,7 +50,7 @@ def preview(actions):
       new_topology[action.vm]['used'] = {}
     elif action.type == ActionType.container_create:
       container = {}
-      container['cpu_cores'] = action.cpu
+      container['cpu_cores'] = action.cpub
       container['mem'] = action.mem
       new_topology[action.vm]['used'][action.container] = container
     elif action.type == ActionType.container_set:
