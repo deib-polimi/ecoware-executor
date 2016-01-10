@@ -5,6 +5,8 @@ import vagrantExecutor as vagrant
 import subprocess
 import logging
 
+containers = {}
+
 def get_image(app):
   image = ''
   if app == 'jboss':
@@ -15,21 +17,24 @@ def get_image(app):
     raise Exception('Unknown app: {}'.format(app))
   return image
 
-def get_cpuset():
-  max_cpu = vagrant.get_cpu_limit(vm)
-  cpuset_start = vagrant.get_cpu_counter(vm) % max_cpu
-  cpuset_end = cpuset_start + cpu
-  cpuset = ','.join(map(lambda x: str(x % cpu), range(cpuset_start, cpuset_end)))
-
+def get_cpuset(vm, cpu):
+  cpu_list = []
+  for i in range(0, cpu):
+    cpu_list.append(str(vagrant.use_cpu(vm)))
+  cpuset = ','.join(cpu_list)
+  return cpuset
 
 def create_container(vm, app, cpu, mem):
   port = vagrant.get_docker_port(vm)
   image = get_image(app)
-  vagrant.set_cpu_counter(vm, cpuset_end)
-  logging.debug('new cpu counter={}; vm={}; vm cpu={}'.format(cpuset_end, vm, max_cpu))
+  cpuset = get_cpuset(vm, cpu)  
   cmd = 'docker -H :{} exec -it docker-set docker run -it -d --cpuset-cpus={} -m={}g {}'.format(port, cpuset, mem, image)
   exit_code = subprocess.check_call(cmd.split())
-  logging.info('vm={}; docker run -cpu={} -mem={}g {}; exit code={}'.format(vm, cpu, mem, image, exit_code))
+  if not vm in containers:
+    containers[vm] = {}
+  container_cpuset = containers[vm]
+  container_cpuset[app] = cpuset
+  logging.info('vm={}; docker run -cpuset={} -mem={}g {}; exit code={}'.format(vm, cpuset, mem, image, exit_code))
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
