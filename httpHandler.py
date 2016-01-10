@@ -5,11 +5,14 @@ import SocketServer
 import json
 import topologyManager
 import traceback
+import logging
 from collections import OrderedDict
 from traceback import print_exc
 from sys import argv
-from translator import Translator
 
+
+from translator import Translator
+import executor
 
 
 class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -57,6 +60,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             body = json.dumps(custom_sort(preview))
           elif self.path == '/api/plan/execute':
             actions = translator.translate(post_data, topologyManager.get_current())
+            executor.execute_plan(actions)
             new_topology = topologyManager.execute(actions)
             body = json.dumps(custom_sort(new_topology))
       self.send_response(200)
@@ -69,6 +73,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.end_headers()
 
 if (__name__ == '__main__'):
+  logging.basicConfig(level=logging.DEBUG)  
 
   def custom_sort(dic):
     for key in dic:

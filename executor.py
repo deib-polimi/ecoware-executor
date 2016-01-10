@@ -10,6 +10,10 @@ from action import ActionType
 import json
 import logging
 
+def execute_plan(actions):
+  for action in actions:
+    execute(action)
+
 def execute(action):
   if action.type == ActionType.vm_create:
     vagrant.create_vm(action.vm, action.cpu, action.mem)
