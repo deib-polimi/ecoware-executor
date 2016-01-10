@@ -15,11 +15,13 @@ vms = {}
 conn = sqlite3.connect('executor.db')
 try:
   for row in conn.execute('select * from vm'):
-    vms[row[1]] = {
+    vm = {
       'docker_port': row[4],
       'free_cpu': range(0, row[2]),
       'taken_cpu': []
     }
+    vms[row[1]] = vm
+    logging.debug('vm info loaded: name={}, cpu={}, mem={}, port={}'.format(row[1], row[2], row[3], row[4]))
 finally:
   conn.close()
 
@@ -117,9 +119,9 @@ def delete_vm(vm):
   logging.info('VM {}:{} is deleted; time={}s'.format(vm, vm_data['docker_port'], time.time() - start))
 
 if __name__ == '__main__':
-  logging.basicConfig(level=logging.INFO)
-  create_vm('vm1', 1, 1)
-  create_vm('vm2', 1, 1)
-  delete_vm('vm1')
-  delete_vm('vm2')
+  logging.basicConfig(level=logging.DEBUG)
+  # create_vm('vm1', 1, 1)
+  # create_vm('vm2', 1, 1)
+  # delete_vm('vm1')
+  # delete_vm('vm2')
   
