@@ -6,3 +6,4 @@ README.html
 .workspace
 nohup.out
 *.swp
+executor.db
