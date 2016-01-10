@@ -8,19 +8,21 @@ import time
 import logging
 
 work_dir = '.workspace/executor/vms'
-port = 5000
 vms = {}
 
 def get_docker_port(vm):
+  global vms
   return vms.get(vm)['docker_port']
 
 def use_cpu(vm):
+  global vms
   vm = vms.get(vm)
   cpu_index = vm['free_cpu'].pop()
   vm['taken_cpu'].append(cpu_index)
   return cpu_index
 
 def free_cpu(vm, cpu_index):
+  global vms
   vm = vms.get(vm)
   vm['taken_cpu'].remove(cpu_index)
   vm['free_cpu'].append(cpu_index)
@@ -31,13 +33,15 @@ def modify_vagrant_file(txt, cpu, mem, port):
     if lines[i].find('v.cpus') is not -1:
       lines[i] = '    v.cpus = {}'.format(cpu)
     elif lines[i].find('v.memory') is not -1:
-      lines[i] = '    v.memory = {}'.format(mem * 1000) # gb to mb
+      lines[i] = '    v.memory = {}'.format(mem)
     elif lines[i].find('config.vm.network "forwarded_port"') is not -1:
       lines[i] = '  config.vm.network "forwarded_port", guest: 2376, host: {}'.format(port)
   return '\n'.join(lines)
 
 def create_vm(vm_name, cpu, mem):
-  global port
+  global vms
+  port = 5000
+  mem = mem * 1000 # gb to mb
   if vm_name in vms:
     raise Exception('Vm is already created ', vm_name)
   path = '{0}/{1}'.format(work_dir, vm_name)
@@ -73,6 +77,6 @@ def create_vm(vm_name, cpu, mem):
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO)
-  create_vm('vm1', 1, 1024)
-  create_vm('vm2', 1, 1024)
+  create_vm('vm1', 1, 1)
+  create_vm('vm2', 1, 1)
   
