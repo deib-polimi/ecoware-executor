@@ -57,7 +57,7 @@ def create_vm(vm_name, cpu, mem):
   global vms
   start = time.time()
   port = 5000
-  mem = mem * 1000 # gb to mb
+  mem_mb = mem * 1000 # gb to mb
   if vm_name in vms:
     raise Exception('Vm is already created ', vm_name)
   path = '{0}/{1}'.format(work_dir, vm_name)
@@ -79,7 +79,7 @@ def create_vm(vm_name, cpu, mem):
     'free_cpu': range(0, cpu),
     'taken_cpu': []
   }
-  txt = modify_vagrant_file(txt, cpu, mem, port)
+  txt = modify_vagrant_file(txt, cpu, mem_mb, port)
   with open('{}/{}'.format(path, 'Vagrantfile'), 'w') as f:
     f.write(txt)
   cwd = os.getcwd()
