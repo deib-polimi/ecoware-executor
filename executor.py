@@ -13,6 +13,8 @@ import logging
 def execute(action):
   if action.type == ActionType.vm_create:
     vagrant.create_vm(action.vm, action.cpu, action.mem)
+  if action.type == ActionType.vm_delete:
+    vagrant.delete_vm(action.vm)
   elif action.type == ActionType.container_create:
     docker.create_container(action.vm, action.container, action.cpu, action.mem)
   elif action.type == ActionType.container_set:

@@ -6,6 +6,7 @@ import errno
 import shutil
 import time
 import logging
+import time
 
 work_dir = '.workspace/executor/vms'
 vms = {}
@@ -40,6 +41,7 @@ def modify_vagrant_file(txt, cpu, mem, port):
 
 def create_vm(vm_name, cpu, mem):
   global vms
+  start = time.time()
   port = 5000
   mem = mem * 1000 # gb to mb
   if vm_name in vms:
@@ -69,14 +71,31 @@ def create_vm(vm_name, cpu, mem):
   cwd = os.getcwd()
   os.chdir(path)
   try:
-    cmd = 'time vagrant up'
-    logging.info('vagrant up; exit code={}'.format(subprocess.check_call(cmd.split())))
+    cmd = 'vagrant up'
+    subprocess.check_call(cmd.split())
   finally:
     os.chdir(cwd)
-  logging.info('VM {} (cpu={}, mem={}, docker_port={}) is up'.format(vm_name, cpu, mem, vms[vm_name]['docker_port']))
+  logging.info('VM {}:{} (cpu={}, mem={}) is up; time={}s'.format(vm_name, port, cpu, mem, time.time() - start))
+
+def delete_vm(vm):
+  global vms
+  start = time.time()
+  cwd = os.getcwd()
+  path = '{0}/{1}'.format(work_dir, vm)
+  os.chdir(path)
+  try:
+    cmd = 'vagrant destroy -f'
+    subprocess.check_call(cmd.split())
+  finally:
+    os.chdir(cwd)
+  vm_data= vms[vm]
+  del vms[vm]
+  logging.info('VM {}:{} is deleted; time={}s'.format(vm, vm_data['docker_port'], time.time() - start))
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.INFO)
   create_vm('vm1', 1, 1)
   create_vm('vm2', 1, 1)
+  # delete_vm('vm1')
+  # delete_vm('vm2')
   
