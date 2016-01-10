@@ -50,7 +50,7 @@ def preview(actions):
       new_topology[action.vm]['used'] = {}
     elif action.type == ActionType.container_create:
       container = {}
-      container['cpu_cores'] = action.cpub
+      container['cpu_cores'] = action.cpu
       container['mem'] = action.mem
       new_topology[action.vm]['used'][action.container] = container
     elif action.type == ActionType.container_set:
