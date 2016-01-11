@@ -105,7 +105,7 @@ def delete_vm(vm):
   os.chdir(path)
   try:
     cmd = 'vagrant destroy -f'
-    subprocess.check_csall(cmd.split())
+    subprocess.check_call(cmd.split())
   finally:
     os.chdir(cwd)
   vm_data = vms[vm]
