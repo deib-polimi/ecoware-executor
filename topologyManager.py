@@ -18,10 +18,10 @@ try:
       'cpu_cores': row[2],
       'mem': row[3]
     }
+    _topology[row[1]]['used'] = {}
     vm_ids[row[0]] = row[1]
   for row in conn.execute('select * from container'):
     vm = vm_ids[row[1]]
-    _topology[vm]['used'] = {}
     cpuset = row[3]
     cpu = len(cpuset.split(','))
     _topology[vm]['used'][row[2]] = {

@@ -166,7 +166,8 @@ class Translator:
     vm_count = len(topology)
     # hardcoded vm aws m4.large
     vm_cpu = 2
-    vm_mem = 8
+    # vm_mem = 8
+    vm_mem = 2 # test on polimi servers
     resources_cpu = vm_cpu * vm_count
     resources_mem = vm_mem * vm_count
     if demand_cpu > resources_cpu or demand_mem > resources_mem:

@@ -1,11 +1,13 @@
 #!/usr/bin/python
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 import SimpleHTTPServer
 import SocketServer
 import json
 import topologyManager
 import traceback
-import logging
+
 from collections import OrderedDict
 from traceback import print_exc
 from sys import argv
@@ -73,8 +75,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.end_headers()
 
 if (__name__ == '__main__'):
-  logging.basicConfig(level=logging.DEBUG)  
-
+  
   def custom_sort(dic):
     for key in dic:
       if isinstance(dic[key], dict):
