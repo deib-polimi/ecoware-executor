@@ -112,6 +112,8 @@ def delete_vm(vm):
   del vms[vm]
   conn = sqlite3.connect('executor.db')
   try:
+    vm_id = conn.execute("select id from vm where name = '{}'".format(vm)).fetchone()[0]
+    conn.execute('delete from container where vm_id = {}'.format(vm_id))
     conn.execute("delete from vm where name = '{}'".format(vm))
     conn.commit()
   finally:
