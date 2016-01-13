@@ -5,3 +5,5 @@ echo "alias docker-set='docker -H :2376 exec -it docker-set docker'" >> /home/va
 cp /vagrant/docker /etc/default/docker
 service docker restart
 docker -H 2376 run -it --privileged -d --name=docker-set n43jl/docker-set
+docker -H 2376 exec docker-set docker pull nginx
+docker -H 2376 exec docker-set docker pull apache2
