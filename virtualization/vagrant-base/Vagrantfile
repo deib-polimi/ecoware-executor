@@ -3,7 +3,11 @@ Vagrant.configure("2") do |config|
     v.memory = 2048
     v.cpus = 2
   end
-  config.vm.box = "docker-set"
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.provision "docker" do |d|
+    d.pull "n43jl/docker-set"
+    config.vm.provision :shell, path: "bootstrap.sh"
+  end
   config.vm.network "forwarded_port", guest: 2376, host: 5000
 end
 
