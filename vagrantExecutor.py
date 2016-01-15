@@ -67,8 +67,6 @@ def create_vm(vm_name, cpu, mem):
     if exc.errno == errno.EEXIST and os.path.isdir(path):
       pass
     else: raise
-  shutil.copy('virtualization/vagrant/bootstrap.sh', path)
-  shutil.copy('virtualization/vagrant/docker', path)
   with open('virtualization/vagrant/Vagrantfile') as vagrant_file:
     txt = vagrant_file.read()
   taken_ports = map(lambda x: x['docker_port'], vms.values())
@@ -122,8 +120,8 @@ def delete_vm(vm):
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
-  # create_vm('vm1', 2, 2)
-  # create_vm('vm2', 2, 2)
-  # delete_vm('vm1')
-  # delete_vm('vm2')
+  create_vm('vm1', 2, 1)
+  create_vm('vm2', 2, 1)
+  delete_vm('vm1')
+  delete_vm('vm2')
   
