@@ -20,7 +20,7 @@ class TestTranslator(unittest.TestCase):
       plan_file = 'tests/plan{0}.json'.format(i)
       if isfile(plan_file):
         plan = read_plan(plan_file)
-        translator = Translator()
+        translator = Translator(2, 8)
         topologyManager.load('tests/topology{0}.json'.format(i))
         actions = translator.translate(plan, topologyManager.get_current())
         string_actions = map(lambda x: x.__str__(), actions)
@@ -38,7 +38,7 @@ class TestTranslator(unittest.TestCase):
   def test_allocation2plan(self):
     allocation = self.read_json('tests/allocation1.0.json')
     topologyManager.load('tests/topology1.json')
-    translator = Translator()
+    translator = Translator(2, 8)
     actions = translator._2plan(allocation, topologyManager.get_current())
     string_actions = map(lambda x: x.__str__(), actions)
     result = self.read_json('tests/result1.0.json')
@@ -48,7 +48,7 @@ class TestTranslator(unittest.TestCase):
     plan_file = 'tests/plan_no_sol.json'
     try:
       plan = read_plan(plan_file)
-      translator = Translator()
+      translator = Translator(2, 8)
       topologyManager.load('tests/topology_no_sol.json')
       actions = translator.translate(plan, topologyManager.get_current())
       self.AssertTrue(False)

@@ -23,6 +23,10 @@ WEIGHT = {
 
 class Translator:
 
+  def __init__(self, default_cpu, default_mem):
+    self.default_cpu = default_cpu
+    self.default_mem = default_mem
+
   def _2allocation(self, topology, solution):
     vms = {}
     for var in solution:
@@ -164,10 +168,8 @@ class Translator:
       demand_cpu += plan[tier]['cpu_cores']
       demand_mem += plan[tier]['mem']
     vm_count = len(topology)
-    # hardcoded vm aws m4.large
-    vm_cpu = 2
-    # vm_mem = 8
-    vm_mem = 2 # test on polimi servers
+    vm_cpu = self.default_cpu
+    vm_mem = self.default_mem
     resources_cpu = vm_cpu * vm_count
     resources_mem = vm_mem * vm_count
     if demand_cpu > resources_cpu or demand_mem > resources_mem:
