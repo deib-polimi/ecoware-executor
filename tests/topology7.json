@@ -1,0 +1,16 @@
+{
+  "vm0": {
+    "cpu_cores": 2,
+    "mem": 2,
+    "used": {
+      "db": {
+        "cpu_cores": 1,
+        "mem": 1
+      },
+      "jboss": {
+        "cpu_cores": 1,
+        "mem": 1
+      }
+    }
+  }
+}

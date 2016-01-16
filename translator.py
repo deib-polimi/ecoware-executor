@@ -102,9 +102,8 @@ class Translator:
         else:
           for tier in topology[vm]['used']:
             if not tier in allocation[vm]:
-              points += WEIGHT['container_delete']
-    for vm in allocation:
-      points += WEIGHT['vm_use']
+              actions.append(Action(ActionType.container_delete, vm, tier))
+
     return actions
 
   def translate(self, plan_json, topology):
@@ -158,6 +157,12 @@ class Translator:
       if (not app in demand or 
           plan_json[app]['cpu_cores'] != demand[app]['cpu_cores'] or
           plan_json[app]['mem'] != demand[app]['mem']):
+        return True
+    for app in demand:
+      if not app in plan_json:
+        plan_json[app] = {}
+        plan_json[app]['cpu_cores'] = 0
+        plan_json[app]['mem'] = 0
         return True
     return False
 
@@ -235,7 +240,7 @@ def read_plan(filename):
   return plan
 
 def main():
-  translator = Translator()
+  translator = Translator(2, 2)
   plan = read_plan('plan.json')
   actions = translator.translate(plan, topologyManager.get_current())
   string_actions = map(lambda x: x.__str__(), actions)
