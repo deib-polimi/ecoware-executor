@@ -24,7 +24,7 @@ def execute(action):
   elif action.type == ActionType.container_set:
     docker.set_container(action.vm, action.container, action.cpu, action.mem)
   elif action.type == ActionType.container_delete:
-    docker.delete_container(action.vm, action.container)
+    docker.rm_container(action.vm, action.container)
   logging.info('Executed {}'.format(action.__str__()))
 
 if __name__ == '__main__':

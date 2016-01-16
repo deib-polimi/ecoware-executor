@@ -91,9 +91,10 @@ def rm_container(vm, app):
   cmd = 'docker -H :{} exec -it docker-set docker rm -f {}'.format(port, app)
   subprocess.check_call(cmd.split())
   cpuset = containers.get(vm).get(app)
-  cpu_list = map(int, cpuset.split(','))
-  for i in cpu_list:
-    vagrant.free_cpu(vm, i)
+  if cpuset is not None:
+    cpu_list = map(int, cpuset.split(','))
+    for i in cpu_list:
+      vagrant.free_cpu(vm, i)
   conn = sqlite3.connect('executor.db')
   try:
     vm_id = conn.execute("select id from vm where name = '{}'".format(vm)).fetchone()[0]
@@ -105,8 +106,9 @@ def rm_container(vm, app):
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
-  vagrant.create_vm('vm2', 2, 2)
-  create_container('vm2', 'jboss', 2, 2)
-  set_container('vm2', 'jboss', 1, 1)
-  rm_container('vm2', 'jboss')
+  # vagrant.create_vm('vm2', 2, 2)
+  # create_container('vm2', 'jboss', 2, 2)
+  # set_container('vm2', 'jboss', 1, 1)
+  # rm_container('vm2', 'jboss')
+  # vagrant.delete_vm('vm2')
 
