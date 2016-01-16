@@ -58,9 +58,10 @@ def preview(actions):
       container['cpu_cores'] = action.cpu
       container['mem'] = action.mem
     elif action.type == ActionType.vm_delete:
-        new_topology.pop(action.vm)
+      new_topology.pop(action.vm)
     elif action.type == ActionType.container_delete:
-      new_topology[action.vm].pop(action.container)
+      print 'new_topology', new_topology, 'action_vm', action.vm, 'tier=', action.container
+      new_topology[action.vm]['used'].pop(action.container)
   return new_topology
 
 def execute(actions):

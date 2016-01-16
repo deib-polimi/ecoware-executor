@@ -45,7 +45,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
           topologyManager.set(post_data)
           body = '{}'
         else:
-          translator = Translator()
+          translator = Translator(2, 1)
           actions = translator.translate(post_data, topologyManager.get_current())
           if actions is None:
             self.send_response(200)
