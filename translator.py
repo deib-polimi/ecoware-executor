@@ -8,6 +8,7 @@ from action import ActionType, Action
 from math import ceil
 import time
 import sys
+import logging
 
 
 DELIMETER = '_$_'
@@ -140,7 +141,17 @@ class Translator:
       actions = sorted(plan, comparator)
       return actions
     else:
-      return []
+      logging.debug('no solution needed')
+      actions = []
+      for vm in topology:
+        is_used = False
+        for app in plan_json:
+          if app in topology[vm]['used']:
+            is_used = True
+            break
+        if not is_used:
+          actions.append(Action(ActionType.vm_delete, vm))
+      return actions
 
   def need_solution(self, plan_json, topology):
     demand = {}
