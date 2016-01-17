@@ -1,6 +1,10 @@
 model allocation.mod
-data allocation1.dat
+data allocation.dat
 option solver cplex;
 solve;
-display cpu, mem, usage;
+display tier_used, use_tier_weight, not_use_tier_weight;
+display vm_used, cpu_max, mem_max, use_vm_weight, not_use_vm_weight;
+display cpu_demand, mem_demand;
 
+display tier_usage, tier_idle, cpu, mem;
+display vm_usage, vm_idle;

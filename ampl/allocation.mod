@@ -1,75 +1,95 @@
 # SETS
-# set of all the Tiers
-set I; 
+# set of all the Tiers (applications)
+set Tier; 
 
-# set of all the VM
-set J;
+# set of all the VM (virtual machines)
+set VM;
 
 
 # PARAMS
-# if Tier[i] used VM[j]
-param u{I, J}; 
+# if Tier[i] is already using VM[j]
+param tier_used{Tier, VM}; 
+
+# if VM[j] is already used
+param vm_used{VM};
 
 # CPU demand for Tiers
-param c{I};
+param cpu_demand{Tier};
 
 # RAM demand for Tiers
-param m{I};
+param mem_demand{Tier};
 
 # CPU availability of VM[j]
-param c_max{J};
+param cpu_max{VM};
 
 # RAM availability of VM[j]
-param m_max{J};
+param mem_max{VM};
 
-# Price of VM[j]
-# param p{J};
+# weight for container create / set (usage of tier on VM)
+param use_tier_weight{Tier, VM};
 
+# weight for VM create / use (usage of VM)
+param use_vm_weight{VM};
+
+# weight for not using container (delete container on VM)
+param not_use_tier_weight{Tier, VM};
+
+# weight for not using VM (delete vm)
+param not_use_vm_weight{VM};
 
 # VARS
-# if Tier[i] uses VM[j]
-var usage{I, J} >= 0 binary;
-var vm_usage{J} >= 0 binary;
-var container_delete{I, J} >= 0 binary;
-var container_create{I, J} >= 0 binary;
-var container_set{I, J} >= 0 binary;
+var tier_usage{Tier, VM} >= 0 binary;
+var vm_usage{VM} >= 0 binary;
+# opposite to tier_usage
+var tier_idle{Tier, VM} >= 0 binary;
+# opposite to vm_usage
+var vm_idle{VM} >= 0 binary;
 
 # Number of CPU Tier[i] uses in VM[j]
-var cpu{I, J} >= 0 integer;
-
-# RAM in units (1 unit = 0.5GB) Tier[i] uses in VM[j]
-var mem{I, J} >= 0 integer; 
+var cpu{Tier, VM} >= 0 integer;
+# RAM in units Tier[i] uses in VM[j]
+var mem{Tier, VM} >= 0 integer; 
 
 
 # OBJECTIVE FUNCTION
 minimize cost:
-  sum{j in J, i in I} usage[i, j];
+  sum{i in Tier, j in VM} (use_tier_weight[i, j] * tier_usage[i, j] + not_use_tier_weight[i, j] * tier_idle[i, j]) + sum{j in VM} (use_vm_weight[j] * vm_usage[j] + not_use_vm_weight[j] * vm_idle[j]);
 
 
 # CONSTRAINTS
-subject to CPU_availability{j in J}:
-  sum{i in I} cpu[i, j] <= c_max[j];
+# availability for CPU and activation of vm_usage
+subject to CPU_availability{j in VM}:
+  sum{i in Tier} cpu[i, j] <= cpu_max[j] * vm_usage[j];
 
-subject to RAM_availability{j in J}:
-  sum{i in I} mem[i, j] <= m_max[j];
+# availability for RAM
+subject to RAM_availability{j in VM}:
+  sum{i in Tier} mem[i, j] <= mem_max[j];
 
-subject to CPU_demand{i in I}:
-  sum{j in J} cpu[i, j] >= c[i];
+subject to CPU_demand{i in Tier}:
+  sum{j in VM} cpu[i, j] >= cpu_demand[i];
 
-subject to RAM_demand{i in I}:
-  sum{j in J} mem[i, j] >= m[i];
+subject to RAM_demand{i in Tier}:
+  sum{j in VM} mem[i, j] >= mem_demand[i];
 
-subject to CPU_activation{i in I, j in J}:
-  c_max[j] * usage[i, j] >= cpu[i, j];
+subject to CPU_activation{i in Tier, j in VM}:
+  cpu_max[j] * tier_usage[i, j] >= cpu[i, j];
 
-subject to RAM_activation{i in I, j in J}:
-  m_max[j] * usage[i, j] >= mem[i, j];
+subject to RAM_activation{i in Tier, j in VM}:
+  mem_max[j] * tier_usage[i, j] >= mem[i, j];
 
-# CPU RAM activation
-subject to CPU_RAM_activation{i in I, j in J}:
-  c_max[j] * cpu[i, j] >= mem[i, j];
+# not allow usage of RAM, but 0 usage of CPU
+subject to CPU_RAM_activation{i in Tier, j in VM}:
+  cpu_max[j] * cpu[i, j] >= mem[i, j];
 
 # not allow usage of CPU, but 0 usage of RAM
-subject to RAM_CPU_activation{i in I, j in J}:
-  m_max[j] * mem[i, j] >= cpu[i, j];
+subject to RAM_CPU_activation{i in Tier, j in VM}:
+  mem_max[j] * mem[i, j] >= cpu[i, j];
+
+# link tier_idle to tier_usage
+subject to link_tier_idle{i in Tier, j in VM}:
+  tier_idle[i, j] + tier_usage[i, j] = 1;
+
+# link tier_idle to tier_usage
+subject to link_vm_idle{j in VM}:
+  vm_idle[j] + vm_usage[j] = 1;
 
