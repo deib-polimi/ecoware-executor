@@ -38,6 +38,8 @@ param not_use_tier_weight{Tier, VM};
 param not_use_vm_weight{VM};
 
 # VARS
+var tier_changed{Tier, VM} >= 0 binary;
+
 var tier_usage{Tier, VM} >= 0 binary;
 var vm_usage{VM} >= 0 binary;
 # opposite to tier_usage
@@ -53,7 +55,7 @@ var mem{Tier, VM} >= 0 integer;
 
 # OBJECTIVE FUNCTION
 minimize cost:
-  sum{i in Tier, j in VM} (use_tier_weight[i, j] * tier_usage[i, j] + not_use_tier_weight[i, j] * tier_idle[i, j]) + sum{j in VM} (use_vm_weight[j] * vm_usage[j] + not_use_vm_weight[j] * vm_idle[j]);
+  sum{i in Tier, j in VM} (use_tier_weight[i, j] * tier_usage[i, j] - use_tier_weight[i, j] * tier_changed[i, j] + not_use_tier_weight[i, j] * tier_idle[i, j]) + sum{j in VM} (use_vm_weight[j] * vm_usage[j] + not_use_vm_weight[j] * vm_idle[j]);
 
 
 # CONSTRAINTS
@@ -79,11 +81,11 @@ subject to RAM_activation{i in Tier, j in VM}:
 
 # not allow usage of RAM, but 0 usage of CPU
 subject to CPU_RAM_activation{i in Tier, j in VM}:
-  cpu_max[j] * cpu[i, j] >= mem[i, j];
+  mem_max[j] * cpu[i, j] >= mem[i, j];
 
 # not allow usage of CPU, but 0 usage of RAM
 subject to RAM_CPU_activation{i in Tier, j in VM}:
-  mem_max[j] * mem[i, j] >= cpu[i, j];
+  cpu_max[j] * mem[i, j] >= cpu[i, j];
 
 # link tier_idle to tier_usage
 subject to link_tier_idle{i in Tier, j in VM}:
