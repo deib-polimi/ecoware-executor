@@ -14,31 +14,28 @@
         <div class="navbar-header">
           <a class="navbar-brand" href="#">Executor</a>
         </div>
-        <div id="navbar" class="navbar-collapse">
-          <button id="preview-btn" class="btn navbar-btn">Preview</button>
-          <button id="execute-btn" class="btn btn-success navbar-btn">Execute</button>
-        </div><!--/.navbar-collapse -->
       </div>
     </nav>
     <div class="container workspace">
       <div class="row">
-        <div class="col-md-6">
-          <h3>Plan input (json)</h3>
-          <textarea id="plan-area" class="data-input"></textarea>
-        </div>
-        <div class="col-md-6">
-          <h3>Executor actions</h3>
-          <textarea id="actions-area" class="data-input" readonly></textarea>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-6">
-          <h3>Current topology</h3>
-          <textarea id="current-topology" class="data-input"></textarea>
-        </div>
-        <div class="col-md-6">
-          <h3>Preview topology</h3>
-          <textarea id="preview-topology" class="data-input" readonly></textarea>
+        <div class="col-md-12">
+          <table class="table">
+            <caption>List of running virtual machines</caption>
+            <thead><tr>
+              <td>#</td>
+              <td>Name</td>
+              <td>Docker port</td>
+              <td>CPU cores</td>
+              <td>RAM units</td>
+            </tr></thead>
+            <tbody><tr>
+              <td>1</td>
+              <td>vm0</td>
+              <td>5000</td>
+              <td>2</td>
+              <td>2 (1gb)</td>
+            </tr></tbody>
+          </table>
         </div>
       </div>
     </div>
