@@ -21,6 +21,10 @@ def init():
   finally:
     conn.close()
 
+def get_vms():
+  global _topology
+  return _topology.values()
+
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
   init()
