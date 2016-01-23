@@ -29,18 +29,27 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
   def do_POST(self):
     start = time.time()
-    post_data_string = self.rfile.read(int(self.headers['Content-Length']))
-    post_data = json.loads(post_data_string)
+    args = self.path.split('/')
+    if args[-1] == 'stop':
+      id = int(args[-2])
+      topologyManager.stop_vm(id)
+      response = {}
+    elif args[-1] == 'start':
+      id = int(args[-2])
+      topologyManager.start_vm(id)
+      response = {}
+    else:
+      post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+      post_data = json.loads(post_data_string)
+      vm = topologyManager.create_vm(post_data['name'], post_data['cpu_cores'], post_data['mem_units'])
+      response = post_data
+      response['id'] = vm.id
+      response['docker_port'] = vm.docker_port
+    response['time'] = '{0:.2f}'.format(time.time() - start)
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
     self.end_headers()
-    vm = topologyManager.create_vm(post_data['name'], post_data['cpu_cores'], post_data['mem_units'])
-    response = post_data
-    response['id'] = vm.id
-    response['docker_port'] = vm.docker_port
-    response['time'] = '{0:.2f}'.format(time.time() - start)
     self.wfile.write(json.dumps(response))
-    return
 
   def do_DELETE(self):
     start = time.time()

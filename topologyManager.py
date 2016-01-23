@@ -54,3 +54,11 @@ def delete_vm(id):
   db.delete_vm(id)
   del _topology[id]
   del _ports[vm2remove.docker_port]
+
+def stop_vm(id):
+  vm2stop = _topology[id]
+  vm2stop.stop()
+
+def start_vm(id):
+  vm2start = _topology[id]
+  vm2start.start()
