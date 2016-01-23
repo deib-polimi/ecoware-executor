@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>Executor</title>
+    <link type="text/css" rel="stylesheet" href="css/font-awesome.min.css">
     <link type="text/css" rel="stylesheet" href="css/bootstrap.min.css">
     <link type="text/css" rel="stylesheet" href="css/bootstrap-theme.min.css">
     <link type="text/css" rel="stylesheet" href="css/toastr.min.css">
@@ -13,28 +14,29 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close" id="top-close-btn"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title">Add VM</h4>
           </div>
           <div class="modal-body">
-            <form>
+            <form id="add-vm-form">
               <div class="form-group">
                 <label for="vm-name-input">Name</label>
-                <input type="text" class="form-control" id="vm-name-input" placeHolder="Virtual Machine Name" />
+                <input type="text" class="form-control" id="vm-name-input" placeHolder="Virtual Machine Name" required />
               </div>
               <div class="form-group">
                 <label for="vm-cpu-input">CPU cores</label>
-                <input type="number" ste="1" min="1" class="form-control" id="vm-cpu-input" placeHolder="Number of CPU cores" />
+                <input type="number" ste="1" min="1" class="form-control" id="vm-cpu-input" placeHolder="Number of CPU cores" required />
               </div>
               <div class="form-group">
                 <label for="vm-mem-input">Mem units (512mb):</label>
-                <input type="number" step="1" min="1" class="form-control" id="vm-mem-input" placeHolder="Number of RAM units (512mb)" />
+                <input type="number" step="1" min="1" class="form-control" id="vm-mem-input" placeHolder="Number of RAM units (512mb)" required />
               </div>
+              <input type="submit" style="position: absolute; left: -9999px"/>
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Create and Start</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal" id="close-btn">Close</button>
+            <button type="button" class="btn btn-primary" id="create-vm-btn" data-loading-text="<i class='fa fa-spinner fa-spin'></i> Loading...">Create and Start</button>
           </div>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
