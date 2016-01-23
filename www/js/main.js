@@ -18,7 +18,7 @@ $(document).ready(function () {
     var td = $('<td>').text(vm.id).appendTo($row);
     $('<td>').text(vm.name).appendTo($row);
     $('<td>').text(vm.cpu_cores).appendTo($row);
-    $('<td>').text(vm.mem_units).appendTo($row);
+    $('<td>').text('{0} ({1}gb)'.format(vm.mem_units, vm.mem)).appendTo($row);
     $('<td>').text(vm.docker_port).appendTo($row);
     var $btn = $('<button>').addClass('btn btn-default').text('Delete').click(function() {
       var $row = $(this).closest('tr');

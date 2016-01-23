@@ -4,7 +4,8 @@
 import logging
 
 import vm
-from db import get_connection, insert_vm
+import db
+from db import get_connection
 
 
 _topology = {}
@@ -16,7 +17,7 @@ def init():
   try:
     for row in conn.execute('select * from vm'):
       new_vm = vm.Vm(row[0], row[1], row[2], row[3], row[4])
-      _topology[new_vm.name] = new_vm
+      _topology[new_vm.id] = new_vm
       _ports[new_vm.docker_port] = new_vm
       logging.debug('vm loaded={}'.format(new_vm))
     logging.debug('vm loaded={}'.format(_topology))
@@ -40,8 +41,16 @@ def create_vm(name, cpu_cores, mem_units):
   id = None
   new_vm = vm.Vm(id, name, cpu_cores, mem_units, port)
   new_vm.start()
-  id = insert_vm(new_vm)
+  id = db.insert_vm(new_vm)
   new_vm.id = id
-  _topology[new_vm.name] = new_vm
+  _topology[new_vm.id] = new_vm
   _ports[new_vm.docker_port] = new_vm
   return new_vm
+
+def delete_vm(id):
+  global _topology, _ports
+  vm2remove = _topology[id]
+  vm2remove.delete()
+  db.delete_vm(id)
+  del _topology[id]
+  del _ports[vm2remove.docker_port]

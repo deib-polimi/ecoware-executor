@@ -27,7 +27,7 @@ def modify_vagrant_file(txt, cpu, mem, port):
 def create_vm(new_vm):
   start = time.time()
   mem_mb = new_vm.get_mem_mb()
-  path = '{0}/{1}'.format(work_dir, new_vm.name)
+  path = '{}/{}'.format(work_dir, new_vm.name)
   try:
     os.makedirs(path)
   except OSError as exc:
@@ -37,7 +37,7 @@ def create_vm(new_vm):
   with open('virtualization/vagrant/Vagrantfile') as vagrant_file:
     txt = vagrant_file.read()
   txt = modify_vagrant_file(txt, new_vm.cpu_cores, mem_mb, new_vm.docker_port)
-  with open('{}/{}'.format(path, 'Vagrantfile'), 'w') as f:
+  with open('{}/Vagrantfile'.format(path), 'w') as f:
     f.write(txt)
   cwd = os.getcwd()
   os.chdir(path)
@@ -48,19 +48,38 @@ def create_vm(new_vm):
     os.chdir(cwd)
   logging.info('VM {}:{} (cpu={}, mem={}mb) is up; time={}s'.format(new_vm.name, new_vm.docker_port, new_vm.cpu_cores, mem_mb, time.time() - start))
 
-def delete_vm(old_vm):
+def delete_vm(vm2remove):
   start = time.time()
   cwd = os.getcwd()
-  path = '{0}/{1}'.format(work_dir, old_vm)
+  path = '{}/{}'.format(work_dir, vm2remove.name)
+  try:
+    os.chdir(path)
+    try:
+      cmd = 'vagrant destroy -f'
+      subprocess.check_call(cmd.split())
+    finally:
+      os.chdir(cwd)
+    os.remove('{}/Vagrantfile'.format(path))
+    shutil.rmtree(path)
+  except:
+    pass
+  logging.info('VM {}:{} is deleted; time={}s'.format(vm2remove.name, vm2remove.docker_port, time.time() - start))
+
+def stop_vm(vm2remove):
+  start = time.time()
+  cwd = os.getcwd()
+  path = '{0}/{1}'.format(work_dir, vm2remove.name)
   os.chdir(path)
   try:
-    cmd = 'vagrant destroy -f'
+    cmd = 'vagrant halt'
     subprocess.check_call(cmd.split())
   finally:
     os.chdir(cwd)
-  logging.info('VM {}:{} is deleted; time={}s'.format(old_vm, vm_data['docker_port'], time.time() - start))
+  logging.info('VM {}:{} is stopped; time={}s'.format(vm2remove.name, vm2remove.docker_port, time.time() - start))
   
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
   new_vm = vm.Vm(0, 'test', 1, 1, 5000)
-  create_vm(new_vm)
+  # create_vm(new_vm)
+  # stop_vm(new_vm)
+  delete_vm(new_vm)

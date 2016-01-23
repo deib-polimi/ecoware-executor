@@ -3,7 +3,7 @@
 import json
 
 import topologyManager
-from vagrant import create_vm
+import vagrant
 
 class Vm:
 
@@ -15,15 +15,22 @@ class Vm:
     self.docker_port = int(docker_port)
     self.cpu_cores = int(cpu_cores)
     self.mem_units = int(mem_units)
+    self.mem = self.get_mem()
 
   def get_mem(self):
-    return self.get_mem_mb / 1024.
+    return self.get_mem_mb() / 1024.
 
   def get_mem_mb(self):
     return Vm.MEM_UNIT * self.mem_units
 
   def start(self):
-    create_vm(self)
+    vagrant.create_vm(self)
+
+  def delete(self):
+    vagrant.delete_vm(self)
+
+  def stop(self):
+    vagrant.stop_vm(self)
 
   def __dict__(self):
     return {
