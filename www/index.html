@@ -9,10 +9,43 @@
     <link type="text/css" rel="stylesheet" href="css/main.css">
   </head>
   <body>
+    <div class="modal fade" tabindex="-1" role="dialog" id="add-vm-modal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Add VM</h4>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group">
+                <label for="vm-name-input">Name</label>
+                <input type="text" class="form-control" id="vm-name-input" placeHolder="Virtual Machine Name" />
+              </div>
+              <div class="form-group">
+                <label for="vm-cpu-input">CPU cores</label>
+                <input type="number" ste="1" min="1" class="form-control" id="vm-cpu-input" placeHolder="Number of CPU cores" />
+              </div>
+              <div class="form-group">
+                <label for="vm-mem-input">Mem units (512mb):</label>
+                <input type="number" step="1" min="1" class="form-control" id="vm-mem-input" placeHolder="Number of RAM units (512mb)" />
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Create and Start</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
           <a class="navbar-brand" href="#">Executor</a>
+        </div>
+        <div class="navbar-collapse">
+          <button class="btn navbar-btn" data-toggle="modal" data-target="#add-vm-modal"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> VM</button>
         </div>
       </div>
     </nav>
