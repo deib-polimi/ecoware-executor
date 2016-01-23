@@ -1,3 +1,15 @@
+if (!String.prototype.format) {
+  String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) {
+      return typeof args[number] != 'undefined'
+        ? args[number]
+        : match
+      ;
+    });
+  };
+}
+
 $(document).ready(function () {
   'use strict';
 
@@ -25,13 +37,20 @@ $(document).ready(function () {
         cpu_cores: $('#vm-cpu-input').val(),
         mem_units: $('#vm-mem-input').val()
       };
-      $.post('/api/vm/create', data, function(resp) {
-        toastr.success('VM {} is created (time={}s'.format(data.name, 60));
-        $btn.button('reset');
-      }).fail(function() {
-        toastr.error('Error creating VM')
-        console.error('Error creating VM')
-        $btn.button('reset');
+      $.ajax({
+        url: '/api/vm/create', 
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data), 
+        success: function(resp) {
+          toastr.success('VM {0} is created (time={1}s)'.format(data.name, 60));
+          $btn.button('reset');
+        },
+        error: function() {
+          toastr.error('Error creating VM')
+          console.error('Error creating VM')
+          $btn.button('reset');
+        }
       });
     }
   });

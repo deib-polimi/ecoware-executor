@@ -2,6 +2,8 @@
 
 import json
 
+import topologyManager
+
 class Vm:
 
   MEM_UNIT = 512
@@ -30,5 +32,3 @@ class Vm:
 
   def __repr__(self):
     return self.__str__()
-
-

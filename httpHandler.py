@@ -5,9 +5,12 @@ logging.basicConfig(level=logging.DEBUG)
 import SimpleHTTPServer
 import SocketServer
 import json
+import time
 from sys import argv
 
+
 import topologyManager
+from vm import Vm
 
 class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def do_GET(self):
@@ -29,7 +32,17 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     
 
   def do_POST(self):
-    return self.routing('post')
+    post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+    post_data = json.loads(post_data_string)
+    self.send_response(200)
+    self.send_header('Content-type', 'application/json')
+    self.end_headers()
+    start = time.clock()
+    vm = topologyManager.create_vm(post_data['name'], post_data['cpu_cores'], post_data['mem_units'])
+    print vm, time.clock() - start
+    self.wfile.write('{"answer": "ok"}')
+    return
+    
 
 if __name__ == '__main__':
   topologyManager.init()
