@@ -9,7 +9,7 @@ import logging
 import time
 import sqlite3
 
-from vm import Vm
+import vm
 
 work_dir = '.workspace/executor/vms'
 
@@ -24,11 +24,10 @@ def modify_vagrant_file(txt, cpu, mem, port):
       lines[i] = '  config.vm.network "forwarded_port", guest: 2376, host: {}'.format(port)
   return '\n'.join(lines)
 
-def create_vm(vm):
+def create_vm(new_vm):
   start = time.time()
-  mem_mb = vm.mem_units * Vm.MEM_UNIT
-  print mem_mb
-  path = '{0}/{1}'.format(work_dir, vm.name)
+  mem_mb = new_vm.get_mem_mb()
+  path = '{0}/{1}'.format(work_dir, new_vm.name)
   try:
     os.makedirs(path)
   except OSError as exc:
@@ -37,7 +36,7 @@ def create_vm(vm):
     else: raise
   with open('virtualization/vagrant/Vagrantfile') as vagrant_file:
     txt = vagrant_file.read()
-  txt = modify_vagrant_file(txt, cpu, mem_mb, port)
+  txt = modify_vagrant_file(txt, new_vm.cpu_cores, mem_mb, new_vm.docker_port)
   with open('{}/{}'.format(path, 'Vagrantfile'), 'w') as f:
     f.write(txt)
   cwd = os.getcwd()
@@ -47,35 +46,21 @@ def create_vm(vm):
     subprocess.check_call(cmd.split())
   finally:
     os.chdir(cwd)
-  logging.info('VM {}:{} (cpu={}, mem={}) is up; time={}s'.format(vm_name, port, cpu, mem, time.time() - start))
+  logging.info('VM {}:{} (cpu={}, mem={}mb) is up; time={}s'.format(new_vm.name, new_vm.docker_port, new_vm.cpu_cores, mem_mb, time.time() - start))
 
-def delete_vm(vm):
-  global vms
+def delete_vm(old_vm):
   start = time.time()
   cwd = os.getcwd()
-  path = '{0}/{1}'.format(work_dir, vm)
+  path = '{0}/{1}'.format(work_dir, old_vm)
   os.chdir(path)
   try:
     cmd = 'vagrant destroy -f'
     subprocess.check_call(cmd.split())
   finally:
     os.chdir(cwd)
-  vm_data = vms[vm]
-  del vms[vm]
-  conn = sqlite3.connect('executor.db')
-  try:
-    vm_id = conn.execute("select id from vm where name = '{}'".format(vm)).fetchone()[0]
-    conn.execute('delete from container where vm_id = {}'.format(vm_id))
-    conn.execute("delete from vm where name = '{}'".format(vm))
-    conn.commit()
-  finally:
-    conn.close()
-  logging.info('VM {}:{} is deleted; time={}s'.format(vm, vm_data['docker_port'], time.time() - start))
-
+  logging.info('VM {}:{} is deleted; time={}s'.format(old_vm, vm_data['docker_port'], time.time() - start))
+  
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
-  create_vm('vm1', 2, 1)
-  # create_vm('vm2', 2, 1)
-  delete_vm('vm1')
-  # delete_vm('vm2')
-  
+  new_vm = vm.Vm(0, 'test', 1, 1, 5000)
+  create_vm(new_vm)

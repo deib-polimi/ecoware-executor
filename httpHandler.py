@@ -8,7 +8,6 @@ import json
 import time
 from sys import argv
 
-
 import topologyManager
 from vm import Vm
 
@@ -21,28 +20,40 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.send_response(200)
       self.send_header('Content-type', 'application/json')
       self.end_headers()
-      body = map(lambda x: x.__dict__, vms)
+      body = sorted(map(lambda x: x.__dict__, vms), key=id)
       self.wfile.write(json.dumps(body))
       return
-    elif self.path.startswith('/api/'):
-      return self.routing('get')
     else:
       self.path = '/www' + self.path
     return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
-    
 
   def do_POST(self):
+    start = time.clock()
     post_data_string = self.rfile.read(int(self.headers['Content-Length']))
     post_data = json.loads(post_data_string)
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
     self.end_headers()
-    start = time.clock()
     vm = topologyManager.create_vm(post_data['name'], post_data['cpu_cores'], post_data['mem_units'])
-    print vm, time.clock() - start
-    self.wfile.write('{"answer": "ok"}')
+    response = post_data
+    response['id'] = vm.id
+    response['docker_port'] = vm.docker_port
+    response['time'] = time.clock() - start
+    self.wfile.write(json.dumps(response))
     return
-    
+
+  def do_DELETE(self):
+    start = time.clock()
+    args = self.path.split('/')
+    id = int(args[-1])
+    self.send_response(200)
+    self.send_header('Content-type', 'application/json')
+    self.end_headers()
+    response = {
+      'time': time.clock() - start
+    }
+    self.wfile.write(json.dumps(response))
+    return
 
 if __name__ == '__main__':
   topologyManager.init()
