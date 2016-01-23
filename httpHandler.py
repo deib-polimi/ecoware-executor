@@ -43,6 +43,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       post_data = json.loads(post_data_string)
       vm = topologyManager.create_vm(post_data['name'], post_data['cpu_cores'], post_data['mem_units'])
       response = post_data
+      response['mem'] = vm.mem
       response['id'] = vm.id
       response['docker_port'] = vm.docker_port
     response['time'] = '{0:.2f}'.format(time.time() - start)
