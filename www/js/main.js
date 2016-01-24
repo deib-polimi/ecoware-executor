@@ -79,7 +79,8 @@
     $('<td>').text(vm.name).appendTo($row);
     $('<td>').text(vm.cpu_cores).appendTo($row);
     $('<td>').text('{0} ({1}gb)'.format(vm.mem_units, vm.mem)).appendTo($row);
-    $('<td>').text(vm.docker_port).appendTo($row);
+    var dockerAddr = '{0}:{1}'.format(vm.host, vm.docker_port);
+    $('<td>').text(dockerAddr).appendTo($row);
     var $btnGroup = $('<div>').addClass('btn-group');
     $('<button>').addClass('btn btn-default').text('Delete').click(onVmDelete).appendTo($btnGroup);
     $('<button>').addClass('btn btn-default').text('Stop').click(onVmStop).appendTo($btnGroup);

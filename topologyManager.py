@@ -17,7 +17,7 @@ def init():
   conn = get_connection()
   try:
     for row in conn.execute('select * from vm'):
-      new_vm = vm.Vm(row[0], row[1], row[2], row[3], row[4])
+      new_vm = vm.Vm(row[0], row[1], row[2], row[3], row[4], row[5])
       for subrow in conn.execute('select * from container where vm_id = ?', (new_vm.id,)):
         docker = Container(subrow[0], new_vm, subrow[2], subrow[3], subrow[4])
         new_vm.containers.append(docker)
