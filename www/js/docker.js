@@ -35,8 +35,9 @@
 
   var onContainerStop = function() {
     var container = $(this).closest('tr').data('container');
+    var vm = container.vm;
     var $btn = $(this).button('loading');
-    $.post('/api/vm/{0}/container/{1}/stop'.format(container.vm.id, container.id), function(data) {
+    $.post('/api/vm/{0}/container/{1}/stop'.format(vm.id, container.id), function(data) {
       $btn.button('reset');
       toastr.success('Container "{0}" is stopped on VM "{1}" in {2}s'.format(container.name, vm.name, data.time))
     }).fail(function() {
