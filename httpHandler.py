@@ -41,6 +41,11 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       id = int(args[-2])
       topologyManager.start_vm(id)
       response = {}
+    elif args[-1] == 'container':
+      post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+      post_data = json.loads(post_data_string)
+      vm_id = int(args[-2])
+      container = topologyManager.create_container(vm_id, post_data['name'], post_data['cpuset'], post_data['mem_units'])
     else:
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
       post_data = json.loads(post_data_string)

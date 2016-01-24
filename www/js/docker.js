@@ -1,15 +1,16 @@
 (function() {
 
-   var onVmCreate = function() {
+  var onContainerCrete = function(container) {
     var $btn = $(this);
     $btn.button('loading');
+    vmId = $('#vm-combobox').val();
     var data = {
-      name: $('#vm-name-input').val(),
-      cpu_cores: $('#vm-cpu-input').val(),
-      mem_units: $('#vm-mem-input').val()
+      name: $('#container-name-combobox').val(),
+      cpuset: $('#container-cpuset-input').val(),
+      mem_units: parseInt($('#container-mem-input').val())
     };
     $.ajax({
-      url: '/api/vm', 
+      url: '/api/vm/{0}/container'.format(vmId),
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(data), 
@@ -21,8 +22,8 @@
       },
       error: function() {
         $btn.button('reset');
-        toastr.error('Error creating VM')
-        console.error('Error creating VM')
+        toastr.error('Error creating container')
+        console.error('Error creating container')
       }
     });
   };
@@ -52,13 +53,21 @@
 
     $.get('/api/vm', function(data) {
       $.each(data, function(i, vm) {
-        console.log(vm)
+        $('<option>').val(vm.id).text(vm.name).appendTo('#vm-combobox')
         $.each(vm.containers, function(j, container) {
-          console.log(container)
           container.vm = vm;
           insert_row(container);
         });
       });
+    });
+
+    $('#create-container-btn').click(function() {
+      var isValid = $('#add-container-form')[0].checkValidity();
+      if (!isValid) {
+        $('#add-container-form').find(':submit').click();
+      } else {
+        onContainerCrete.call(this);
+      }
     });
   });
 

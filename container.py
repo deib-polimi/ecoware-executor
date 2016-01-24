@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import vm
+import docker
 
 class Container:
 
@@ -10,6 +11,10 @@ class Container:
     self.name = name
     self.cpuset = map(int, cpuset.split())
     self.mem_units = int(mem_units)
+    self.mem = self.get_mem()
+
+  def start(self):
+    docker.create_container(self)
 
   def get_mem(self):
     return vm.Vm.MEM_UNIT * self.mem_units / 1024.

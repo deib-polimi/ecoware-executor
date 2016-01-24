@@ -67,3 +67,13 @@ def stop_vm(id):
 def start_vm(id):
   vm2start = _topology[id]
   vm2start.start()
+
+def create_container(vm_id, name, cpuset, mem_units):
+  container_vm = _topology[vm_id]
+  id = None
+  new_container = Container(id, container_vm, name, cpuset, mem_units)
+  new_container.start()
+  id = db.insert_container(new_container)
+  new_container.id = id
+  container_vm.containers.append(new_container)
+  return new_container
