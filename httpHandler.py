@@ -15,13 +15,16 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def do_GET(self):
     if self.path == '/':
       self.path = '/www/index.html'
+    elif self.path.startswith('/docker'):
+      args = self.path.split('/')
+      self.path = '/www/docker.html'
     elif self.path.startswith('/api/vm'):
       vms = topologyManager.get_vms()
       self.send_response(200)
       self.send_header('Content-type', 'application/json')
       self.end_headers()
-      body = sorted(map(lambda x: x.__dict__, vms), key=id)
-      self.wfile.write(json.dumps(body))
+      response = sorted(map(lambda x: x.dict(), vms), key=id)
+      self.wfile.write(json.dumps(response))
       return
     else:
       self.path = '/www' + self.path

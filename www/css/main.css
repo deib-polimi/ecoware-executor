@@ -1,6 +1,6 @@
 .workspace {
   position: absolute;
-  top: 80px;
+  top: 120px;
   bottom: 20px;
   left: 0px;
   right: 0px;
@@ -9,4 +9,13 @@
 .hidden {
   position: absolute; 
   left: -9999px
+}
+
+.page-header {
+  margin: 70px 0 32px 78px  !important;
+}
+
+.navbar-nav > li > a.active {
+  color: #fff;
+  cursor: default;
 }

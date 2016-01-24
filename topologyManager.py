@@ -6,6 +6,7 @@ import logging
 import vm
 import db
 from db import get_connection
+from container import Container
 
 
 _topology = {}
@@ -17,10 +18,14 @@ def init():
   try:
     for row in conn.execute('select * from vm'):
       new_vm = vm.Vm(row[0], row[1], row[2], row[3], row[4])
+      for subrow in conn.execute('select * from container where vm_id = ?', (new_vm.id,)):
+        docker = Container(subrow[0], new_vm, subrow[2], subrow[3], subrow[4])
+        new_vm.containers.append(docker)
+        logging.debug('container loaded={} for vm={}'.format(docker, new_vm.id))
       _topology[new_vm.id] = new_vm
       _ports[new_vm.docker_port] = new_vm
       logging.debug('vm loaded={}'.format(new_vm))
-    logging.debug('vm loaded={}'.format(_topology))
+    logging.debug('topology loaded={}'.format(_topology))
   finally:
     conn.close()
 

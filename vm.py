@@ -16,6 +16,7 @@ class Vm:
     self.cpu_cores = int(cpu_cores)
     self.mem_units = int(mem_units)
     self.mem = self.get_mem()
+    self.containers = []
 
   def get_mem(self):
     return self.get_mem_mb() / 1024.
@@ -32,13 +33,14 @@ class Vm:
   def stop(self):
     vagrant.stop_vm(self)
 
-  def __dict__(self):
+  def dict(self):
     return {
       'id': self.id,
       'name': self.name,
       'cpu_cores': self.cpu_cores,
+      'mem_units': self.mem_units,
       'mem': self.get_mem(),
-      'docker_port': self.docker_port
+      'containers': map(lambda x: x.dict(), self.containers)
     }
 
   def __str__(self):
