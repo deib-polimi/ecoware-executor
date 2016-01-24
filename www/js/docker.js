@@ -96,35 +96,41 @@
   };
 
   var onContainerSet = function() {
-    var id = $('#container-id-input').val();
-    var $row = $('#container-{0}'.format(id));
-    var container = $row.data('container');
-    var vm = container.vm;
-    var data = {
-      id: container.id,
-      cpuset: $('#set-container-cpuset-input').val().split(',').map(Number),
-      mem_units: parseInt($('#set-container-mem-input').val()) 
-    };
-    $.ajax('/api/vm/{0}/container/{1}'.format(vm.id, id), {
-      method: 'PUT',
-      contentType: 'application/json',
-      data: JSON.stringify(data),
-      success: function(response) {
-        container.cpuset = response.cpuset;
-        container.mem_units = response.mem_units;
-        container.mem = response.mem;
-        var $td = $row.children('td:nth-child(4)').text(container.cpuset);
-        var memText = '{0} ({1}gb)'.format(container.mem_units, container.mem);
-        $td = $row.children('td:nth-child(5)').text(memText);
-        $('#set-container-modal').modal('hide');
-        toastr.success('Container "{0}" set cpuset={1} and mem={2}gb'.format(container.name, container.cpuset, container.mem));
-      },
-      error: function() {
-        var msg = 'Error set container "{0}"" on VM "{1}"'.format(container.name, vm.name);
-        toastr.error(msg);
-        console.error(msg);
-      }
-    });
+    var isValid = $('#set-container-form')[0].checkValidity();
+    if (!isValid) {
+      $('#set-container-form').find(':submit').click();
+    } else {
+      var id = $('#container-id-input').val();
+      var $row = $('#container-{0}'.format(id));
+      var container = $row.data('container');
+      var vm = container.vm;
+      var data = {
+        id: container.id,
+        cpuset: $('#set-container-cpuset-input').val().split(',').map(Number),
+        mem_units: parseInt($('#set-container-mem-input').val()) 
+      };
+      $.ajax('/api/vm/{0}/container/{1}'.format(vm.id, id), {
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(response) {
+          container.cpuset = response.cpuset;
+          container.mem_units = response.mem_units;
+          container.mem = response.mem;
+          var $td = $row.children('td:nth-child(4)').text(container.cpuset);
+          var memText = '{0} ({1}gb)'.format(container.mem_units, container.mem);
+          $td = $row.children('td:nth-child(5)').text(memText);
+          $('#set-container-modal').modal('hide');
+          toastr.success('Container "{0}" set cpuset={1} and mem={2}gb'.format(container.name, container.cpuset, container.mem));
+        },
+        error: function() {
+          var msg = 'Error set container "{0}"" on VM "{1}"'.format(container.name, vm.name);
+          toastr.error(msg);
+          console.error(msg);
+        }
+      });
+    }
+
   };
 
   var insert_row = function(container) {
