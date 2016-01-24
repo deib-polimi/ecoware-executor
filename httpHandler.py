@@ -42,8 +42,12 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         topologyManager.stop_vm(id)
       response = {}
     elif args[-1] == 'start':
-      id = int(args[-2])
-      topologyManager.start_vm(id)
+      if args[-3] == 'container':
+        container_id = int(args[-2])
+        topologyManager.start_container(container_id)
+      else:
+        id = int(args[-2])
+        topologyManager.start_vm(id)
       response = {}
     elif args[-1] == 'container':
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))

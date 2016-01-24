@@ -85,3 +85,11 @@ def stop_container(id):
         container.stop()
         return
   raise Exception('Container id={} not found'.format(id))
+
+def start_container(id):
+  for vm in _topology.values():
+    for container in vm.containers:
+      if container.id == id:
+        container.start()
+        return
+  raise Exception('Container id={} not found'.format(id))
