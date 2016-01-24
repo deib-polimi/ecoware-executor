@@ -1,8 +1,9 @@
 create table vm (
   id integer primary key,
   name varchar(255) unique not null,
-  cpu inteeer not null,
+  cpu integer not null,
   mem integer not null,
+  host varchar(255) not null,
   docker_port integer unique not null
 );
 
