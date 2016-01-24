@@ -61,7 +61,26 @@
     });
   };
 
-  var onVmDelete = function() {};
+  var onContainerDelete = function() {
+    var $row = $(this).closest('tr');
+    var container = $row.data('container');
+    var $btn = $(this).button('loading');
+    var vm = container.vm;
+    $.ajax('/api/vm/{0}/container/{1}'.format(vm.id, container.id), {
+      method: 'DELETE',
+      success: function(data) {
+        $btn.button('reset');
+        $row.remove();
+        toastr.success('Container "{0}" is deleted on VM "{1}" in {2}s'.format(container.name, vm.name, data.time))
+      },
+      error: function() {
+        $btn.button('reset');
+        var msg = 'Error deleting container "{0}" on VM "{1}"'.format(container.name, vm.name);
+        toastr.error(msg);
+        console.error(msg);
+      }
+    });
+  };
 
   var insert_row = function(container) {
     var $row = $('<tr>');
@@ -71,7 +90,7 @@
     $('<td>').text(container.cpuset).appendTo($row);
     $('<td>').text('{0} ({1}gb)'.format(container.mem_units, container.mem)).appendTo($row);
     var $btnGroup = $('<div>').addClass('btn-group');
-    $('<button>').addClass('btn btn-default').text('Delete').click(onVmDelete).appendTo($btnGroup);
+    $('<button>').addClass('btn btn-default').text('Delete').click(onContainerDelete).appendTo($btnGroup);
     $('<button>').addClass('btn btn-default').text('Stop').click(onContainerStop).appendTo($btnGroup);
     $('<button>').addClass('btn btn-default').text('Start').click(onContainerStart).appendTo($btnGroup);
     $('<td>').append($btnGroup).appendTo($row);

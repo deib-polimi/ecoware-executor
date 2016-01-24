@@ -40,6 +40,17 @@ def start_container(docker_container):
   subprocess.check_call(cmd.split())
   logging.info('vm={}:{}; docker start {}'.format(vm.name, port, name))
 
+def delete_container(docker_container):
+  vm = docker_container.vm
+  port = vm.docker_port
+  name = docker_container.name
+  cmd = 'docker -H :{} exec -it docker-set docker rm -f {}'.format(port, name)
+  try:
+    subprocess.check_call(cmd.split())
+  except Exception, e:
+    logging.error(e)
+  logging.info('vm={}:{}; docker rm -f {}'.format(vm.name, port, name))
+
 def set_container(vm, app, cpu, mem):
   global containers
   port = vagrant.get_docker_port(vm)
@@ -60,30 +71,5 @@ def set_container(vm, app, cpu, mem):
     conn.close()
   logging.info('vm={}:{}; docker set -cpuset={} -m={}g {}'.format(vm, port, cpuset, mem, app))
 
-def rm_container(vm, app):
-  global containers
-  port = vagrant.get_docker_port(vm)
-  cmd = 'docker -H :{} exec -it docker-set docker rm -f {}'.format(port, app)
-  subprocess.check_call(cmd.split())
-  cpuset = containers.get(vm).get(app)
-  if cpuset is not None:
-    cpu_list = map(int, cpuset.split(','))
-    for i in cpu_list:
-      vagrant.free_cpu(vm, i)
-  conn = sqlite3.connect('executor.db')
-  try:
-    vm_id = conn.execute("select id from vm where name = '{}'".format(vm)).fetchone()[0]
-    conn.execute("delete from container where vm_id = {} and name = '{}'".format(vm_id, app))
-    conn.commit()
-  finally:
-    conn.close()
-  logging.info('vm={}:{}; docker rm {}'.format(vm, port, app))
-
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
-  # vagrant.create_vm('vm2', 2, 2)
-  # create_container('vm2', 'jboss', 2, 2)
-  # set_container('vm2', 'jboss', 1, 1)
-  # rm_container('vm2', 'jboss')
-  # vagrant.delete_vm('vm2')
-

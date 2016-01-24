@@ -21,6 +21,7 @@ def delete_vm(id):
   con = get_connection()
   try:
     cur = con.cursor()
+    cur.execute('delete from container where vm_id = ?', (id,))
     cur.execute('delete from vm where id = ?', (id,))
     con.commit()
   finally:
@@ -38,3 +39,12 @@ def insert_container(container):
   finally:
     con.close()
   raise Error('Insert container error')
+
+def delete_container(id):
+  con = get_connection()
+  try:
+    cur = con.cursor()
+    cur.execute('delete from container where id = ?', (id,))
+    con.commit()
+  finally:
+    con.close()

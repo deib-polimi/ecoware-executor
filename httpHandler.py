@@ -75,10 +75,15 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     start = time.time()
     args = self.path.split('/')
     id = int(args[-1])
+    if args[-2] == 'container':
+      topologyManager.delete_container(id)
+    else:
+      topologyManager.delete_vm(id)  
+      
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
     self.end_headers()
-    topologyManager.delete_vm(id)
+    
     response = {
       'time': '{0:.2f}'.format(time.time() - start)
     }

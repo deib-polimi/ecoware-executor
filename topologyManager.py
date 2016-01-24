@@ -93,3 +93,16 @@ def start_container(id):
         container.start()
         return
   raise Exception('Container id={} not found'.format(id))
+
+def delete_container(id):
+  for vm in _topology.values():
+    container2delete = None
+    for container in vm.containers:
+      if container.id == id:
+        container.delete()
+        db.delete_container(id)
+        container2delete = container
+    if not container2delete is None:
+      vm.containers.remove(container2delete)
+      return
+  raise Exception('Container id={} not found'.format(id))
