@@ -4,7 +4,8 @@ create table vm (
   cpu integer not null,
   mem integer not null,
   host varchar(255) not null,
-  docker_port integer not null
+  docker_port integer not null,
+  unique(host, docker_port)
 );
 
 create table container (
