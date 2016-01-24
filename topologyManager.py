@@ -77,3 +77,11 @@ def create_container(vm_id, name, cpuset, mem_units):
   new_container.id = id
   container_vm.containers.append(new_container)
   return new_container
+
+def stop_container(id):
+  for vm in _topology.values():
+    for container in vm.containers:
+      if container.id == id:
+        container.stop()
+        return
+  raise Exception('Container id={} not found'.format(id))

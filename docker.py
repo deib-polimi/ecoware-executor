@@ -24,6 +24,14 @@ def create_container(docker_container):
   subprocess.check_call(cmd.split())
   logging.info('vm={}:{}; docker run -it -d --cpuset-cpus={} -m={}g --name={} {}'.format(vm.name, port, cpuset, mem, name, image))
 
+def stop_container(docker_container):
+  vm = docker_container.vm
+  port = vm.docker_port
+  name = docker_container.name
+  cmd = 'docker -H :{} exec -it docker-set docker stop {}'.format(port, name)
+  subprocess.check_call(cmd.split())
+  logging.info('vm={}:{}; docker stop {}'.format(vm.name, port, name))
+
 def set_container(vm, app, cpu, mem):
   global containers
   port = vagrant.get_docker_port(vm)

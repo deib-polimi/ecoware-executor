@@ -33,6 +33,19 @@
     });
   };
 
+  var onContainerStop = function() {
+    var container = $(this).closest('tr').data('container');
+    var $btn = $(this).button('loading');
+    $.post('/api/vm/{0}/container/{1}/stop'.format(container.vm.id, container.id), function(data) {
+      $btn.button('reset');
+      toastr.success('Container "{0}" is stopped on VM "{1}" in {2}s'.format(container.name, vm.name, data.time))
+    }).fail(function() {
+      $btn.button('reset');
+      toastr.error('Error stopping container "{0}" on VM "{1}"'.format(container.name, vm.name));
+      console.error('Error stopping container');
+    });
+  };
+
   var onVmDelete = function() {};
   var onVmStop = function() {};
   var onVmStart = function() {};
@@ -46,7 +59,7 @@
     $('<td>').text('{0} ({1}gb)'.format(container.mem_units, container.mem)).appendTo($row);
     var $btnGroup = $('<div>').addClass('btn-group');
     $('<button>').addClass('btn btn-default').text('Delete').click(onVmDelete).appendTo($btnGroup);
-    $('<button>').addClass('btn btn-default').text('Stop').click(onVmStop).appendTo($btnGroup);
+    $('<button>').addClass('btn btn-default').text('Stop').click(onContainerStop).appendTo($btnGroup);
     $('<button>').addClass('btn btn-default').text('Start').click(onVmStart).appendTo($btnGroup);
     $('<td>').append($btnGroup).appendTo($row);
     $row.appendTo($('#containers'));

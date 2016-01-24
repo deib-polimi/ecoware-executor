@@ -16,6 +16,9 @@ class Container:
   def start(self):
     docker.create_container(self)
 
+  def stop(self):
+    docker.stop_container(self)
+
   def get_mem(self):
     return self.get_mem_mb() / 1024.
 

@@ -34,8 +34,12 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     start = time.time()
     args = self.path.split('/')
     if args[-1] == 'stop':
-      id = int(args[-2])
-      topologyManager.stop_vm(id)
+      if args[-3] == 'container':
+        container_id = int(args[-2])
+        topologyManager.stop_container(container_id)
+      else:
+        id = int(args[-2])
+        topologyManager.stop_vm(id)
       response = {}
     elif args[-1] == 'start':
       id = int(args[-2])
