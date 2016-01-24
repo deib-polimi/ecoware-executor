@@ -53,7 +53,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
       post_data = json.loads(post_data_string)
       vm_id = int(args[-2])
-      container = topologyManager.create_container(vm_id, post_data['name'], post_data['cpuset'], post_data['mem_units'])
+      container = topologyManager.run_container(vm_id, post_data['name'], post_data['cpuset'], post_data['mem_units'])
       response = post_data
       response['mem'] = container.mem
       response['id'] = container.id
@@ -79,12 +79,35 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       topologyManager.delete_container(id)
     else:
       topologyManager.delete_vm(id)  
-      
+
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
     self.end_headers()
     
     response = {
+      'time': '{0:.2f}'.format(time.time() - start)
+    }
+    self.wfile.write(json.dumps(response))
+    return
+
+  def do_PUT(self):
+    start = time.time()
+    args = self.path.split('/')
+    container_id = int(args[-1])
+    put_data_string = self.rfile.read(int(self.headers['Content-Length']))
+    put_data = json.loads(put_data_string)
+    cpuset = put_data['cpuset']
+    mem = put_data['mem_units']
+    container = topologyManager.set_container(container_id, cpuset, mem)
+    self.send_response(200)
+    self.send_header('Content-type', 'application/json')
+    self.end_headers()
+    
+    response = {
+      'id': container.id,
+      'cpuset': container.cpuset,
+      'mem_units': container.mem_units,
+      'mem': container.mem,
       'time': '{0:.2f}'.format(time.time() - start)
     }
     self.wfile.write(json.dumps(response))

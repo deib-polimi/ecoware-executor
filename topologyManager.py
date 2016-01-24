@@ -68,11 +68,11 @@ def start_vm(id):
   vm2start = _topology[id]
   vm2start.start()
 
-def create_container(vm_id, name, cpuset, mem_units):
+def run_container(vm_id, name, cpuset, mem_units):
   container_vm = _topology[vm_id]
   id = None
   new_container = Container(id, container_vm, name, cpuset, mem_units)
-  new_container.start()
+  new_container.run()
   id = db.insert_container(new_container)
   new_container.id = id
   container_vm.containers.append(new_container)
@@ -105,4 +105,13 @@ def delete_container(id):
     if not container2delete is None:
       vm.containers.remove(container2delete)
       return
+  raise Exception('Container id={} not found'.format(id))
+
+def set_container(id, cpuset, mem_units):
+  for vm in _topology.values():
+    for container in vm.containers:
+      if container.id == id:
+        container.set(cpuset, mem_units)
+        db.set_container(container)
+        return container
   raise Exception('Container id={} not found'.format(id))

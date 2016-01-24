@@ -13,8 +13,11 @@ class Container:
     self.mem_units = int(mem_units)
     self.mem = self.get_mem()
 
+  def run(self):
+    docker.run_container(self)
+
   def start(self):
-    docker.create_container(self)
+    docker.start_container(self)
 
   def stop(self):
     docker.stop_container(self)
@@ -27,6 +30,12 @@ class Container:
 
   def get_mem_mb(self):
     return vm.Vm.MEM_UNIT * self.mem_units
+
+  def set(self, cpuset, mem_units):
+    docker.set_container(self, cpuset, vm.Vm.MEM_UNIT * mem_units)
+    self.cpuset = cpuset
+    self.mem_units = mem_units
+    self.mem = self.get_mem()
 
   def dict(self):
     return {

@@ -31,8 +31,9 @@ def insert_container(container):
   con = get_connection()
   try:
     cur = con.cursor()
+    cpuset = ','.join(map(str, container.cpuset))
     cur.execute('insert into container (vm_id, name, cpuset, mem) values (?, ?, ?, ?)', 
-      (container.vm.id, container.name, ','.join(map(str, container.cpuset)), container.mem_units))
+      (container.vm.id, container.name, cpuset, container.mem_units))
     id = cur.lastrowid
     con.commit()
     return id
@@ -48,3 +49,12 @@ def delete_container(id):
     con.commit()
   finally:
     con.close()
+
+def set_container(container):
+  conn = get_connection()
+  try:
+    cpuset = ','.join(map(str, container.cpuset))
+    conn.execute('update container set cpuset = ?, mem = ? where id = ?', (cpuset, container.mem, container.id))
+    conn.commit()
+  finally:
+    conn.close()

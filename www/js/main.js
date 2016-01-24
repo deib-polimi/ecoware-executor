@@ -9,7 +9,7 @@
       success: function(data) {
         $btn.button('reset');
         $row.remove();
-        toastr.success('VM "{0}" is deleted in {1}s'.format(vm.name, data.time))
+        toastr.success('VM "{0}" is deleted in {1}s'.format(vm.name, data.time));
       },
       error: function() {
         $btn.button('reset');
@@ -24,7 +24,7 @@
     var $btn = $(this).button('loading');
     $.post('/api/vm/{0}/stop'.format(vm.id), function(data) {
       $btn.button('reset');
-      toastr.success('VM "{0}" is stopped in {1}s'.format(vm.name, data.time))
+      toastr.success('VM "{0}" is stopped in {1}s'.format(vm.name, data.time));
     }).fail(function() {
       $btn.button('reset');
       toastr.error('Error stopping vm');
@@ -37,7 +37,7 @@
     var $btn = $(this).button('loading');
     $.post('/api/vm/{0}/start'.format(vm.id), function(data) {
       $btn.button('reset');
-      toastr.success('VM "{0}" is started in {1}s'.format(vm.name, data.time))
+      toastr.success('VM "{0}" is started in {1}s'.format(vm.name, data.time));
     }).fail(function() {
       $btn.button('reset');
       toastr.error('Error starting vm');
@@ -66,8 +66,8 @@
       },
       error: function() {
         $btn.button('reset');
-        toastr.error('Error creating VM')
-        console.error('Error creating VM')
+        toastr.error('Error creating VM');
+        console.error('Error creating VM');
       }
     });
   };
