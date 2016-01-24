@@ -20,20 +20,24 @@
           <div class="modal-body">
             <form id="add-vm-form">
               <div class="form-group">
-                <label for="vm-name-input">Name</label>
+                <label for="vm-name-input"><span>*</span>Name:</label>
                 <input type="text" class="form-control" id="vm-name-input" placeHolder="Virtual Machine Name" required />
               </div>
               <div class="form-group">
-                <label for="vm-cpu-input">CPU cores</label>
+                <label for="vm-cpu-input"><span>*</span>CPU cores:</label>
                 <input type="number" step="1" min="1" class="form-control" id="vm-cpu-input" placeHolder="Number of CPU cores" required />
               </div>
               <div class="form-group">
-                <label for="vm-mem-input">Mem units (512mb):</label>
+                <label for="vm-mem-input"><span>*</span>Mem units (512mb):</label>
                 <input type="number" step="1" min="1" class="form-control" id="vm-mem-input" placeHolder="Number of RAM units (512mb)" required />
               </div>
               <div class="form-group">
                 <label for="vm-host-input">Host:</label>
-                <input maxlength="255" class="form-control" id="vm-host-input" placeHolder="localhost, hostname or IP" required />
+                <input maxlength="255" class="form-control" id="vm-host-input" placeHolder="localhost, hostname or IP" />
+              </div>
+              <div class="form-group">
+                <label for="vm-docker-port-input">Docker port:</label>
+                <input type="number"maxlength="255" class="form-control" id="vm-docker-port-input" placeHolder="5000" />
               </div>
               <input type="submit" class="hidden" />
             </form>

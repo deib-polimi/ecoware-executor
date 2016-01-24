@@ -19,3 +19,7 @@
   color: #fff;
   cursor: default;
 }
+
+.form-group > label > span {
+  color: red;
+}

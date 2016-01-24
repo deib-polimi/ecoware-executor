@@ -23,7 +23,8 @@ def init():
         new_vm.containers.append(docker)
         logging.debug('container loaded={} for vm={}'.format(docker, new_vm.id))
       _topology[new_vm.id] = new_vm
-      _ports[new_vm.docker_port] = new_vm
+      if new_vm.host in ['localhost', '127.0.0.1']:
+        _ports[new_vm.docker_port] = new_vm
       logging.debug('vm loaded={}'.format(new_vm))
     logging.debug('topology loaded={}'.format(_topology))
   finally:
@@ -40,26 +41,28 @@ def get_next_docker_port():
     port += 1
   return port 
 
-def create_vm(name, cpu_cores, mem_units, host):
+def create_vm(name, cpu_cores, mem_units, host, port):
   global _topology, _ports
-  port = get_next_docker_port()
+  if port == -1:
+    port = get_next_docker_port()
   id = None
   new_vm = vm.Vm(id, name, cpu_cores, mem_units, host, port)
   if host in ('localhost', '127.0.0.1'):
     new_vm.start()
+    _ports[new_vm.docker_port] = new_vm
   id = db.insert_vm(new_vm)
   new_vm.id = id
   _topology[new_vm.id] = new_vm
-  _ports[new_vm.docker_port] = new_vm
   return new_vm
 
 def delete_vm(id):
   global _topology, _ports
   vm2remove = _topology[id]
-  vm2remove.delete()
+  if vm2remove in ['localhost', '127.0.0.1']:
+    vm2remove.delete()
+    del _ports[vm2remove.docker_port]
   db.delete_vm(id)
   del _topology[id]
-  del _ports[vm2remove.docker_port]
 
 def stop_vm(id):
   vm2stop = _topology[id]
