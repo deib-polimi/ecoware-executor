@@ -8,8 +8,8 @@ def insert_vm(vm):
   con = get_connection()
   try:
     cur = con.cursor()
-    cur.execute('insert into vm (name, cpu, mem, docker_port) values (?, ?, ?, ?)', 
-      (vm.name, vm.cpu_cores, vm.mem_units, vm.docker_port))
+    cur.execute('insert into vm (name, cpu, mem, host, docker_port) values (?, ?, ?, ?, ?)', 
+      (vm.name, vm.cpu_cores, vm.mem_units, vm.host, vm.docker_port))
     id = cur.lastrowid
     con.commit()
     return id

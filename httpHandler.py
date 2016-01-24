@@ -60,7 +60,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     else:
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
       post_data = json.loads(post_data_string)
-      vm = topologyManager.create_vm(post_data['name'], post_data['cpu_cores'], post_data['mem_units'])
+      vm = topologyManager.create_vm(post_data['name'], post_data['cpu_cores'], post_data['mem_units'], post_data['host'])
       response = post_data
       response['mem'] = vm.mem
       response['id'] = vm.id

@@ -50,8 +50,9 @@
     $btn.button('loading');
     var data = {
       name: $('#vm-name-input').val(),
-      cpu_cores: $('#vm-cpu-input').val(),
-      mem_units: $('#vm-mem-input').val()
+      cpu_cores: parseInt($('#vm-cpu-input').val()),
+      mem_units: parseInt($('#vm-mem-input').val()),
+      host: $('#vm-host-input').val()
     };
     $.ajax({
       url: '/api/vm', 

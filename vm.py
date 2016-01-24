@@ -9,13 +9,14 @@ class Vm:
 
   MEM_UNIT = 512
 
-  def __init__(self, id, name, cpu_cores, mem_units, docker_port):
+  def __init__(self, id, name, cpu_cores, mem_units, host, docker_port):
     self.id = id
     self.name = name
-    self.docker_port = int(docker_port)
-    self.cpu_cores = int(cpu_cores)
-    self.mem_units = int(mem_units)
+    self.cpu_cores = cpu_cores
+    self.mem_units = mem_units
     self.mem = self.get_mem()
+    self.host = host
+    self.docker_port = docker_port
     self.containers = []
 
   def get_mem(self):
@@ -40,11 +41,13 @@ class Vm:
       'cpu_cores': self.cpu_cores,
       'mem_units': self.mem_units,
       'mem': self.get_mem(),
+      'host': self.host,
+      'docker_port': self.docker_port,
       'containers': map(lambda x: x.dict(), self.containers)
     }
 
   def __str__(self):
-    return (self.id, self.name, self.cpu_cores, self.mem_units, self.docker_port).__str__()
+    return (self.id, self.name, self.cpu_cores, self.mem_units, '{}:{}'.format(self.host, self.docker_port)).__str__()
 
   def __repr__(self):
     return self.__str__()

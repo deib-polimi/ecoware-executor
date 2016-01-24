@@ -40,12 +40,13 @@ def get_next_docker_port():
     port += 1
   return port 
 
-def create_vm(name, cpu_cores, mem_units):
+def create_vm(name, cpu_cores, mem_units, host):
   global _topology, _ports
   port = get_next_docker_port()
   id = None
-  new_vm = vm.Vm(id, name, cpu_cores, mem_units, port)
-  new_vm.start()
+  new_vm = vm.Vm(id, name, cpu_cores, mem_units, host, port)
+  if host in ('localhost', '127.0.0.1'):
+    new_vm.start()
   id = db.insert_vm(new_vm)
   new_vm.id = id
   _topology[new_vm.id] = new_vm
