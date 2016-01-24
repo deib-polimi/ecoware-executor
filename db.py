@@ -25,3 +25,16 @@ def delete_vm(id):
     con.commit()
   finally:
     con.close()
+
+def insert_container(container):
+  con = get_connection()
+  try:
+    cur = con.cursor()
+    cur.execute('insert into container (vm_id, name, cpuset, mem) values (?, ?, ?, ?)', 
+      (container.vm.id, container.name, ','.join(map(str, container.cpuset)), container.mem_units))
+    id = cur.lastrowid
+    con.commit()
+    return id
+  finally:
+    con.close()
+  raise Error('Insert container error')

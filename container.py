@@ -17,7 +17,10 @@ class Container:
     docker.create_container(self)
 
   def get_mem(self):
-    return vm.Vm.MEM_UNIT * self.mem_units / 1024.
+    return self.get_mem_mb() / 1024.
+
+  def get_mem_mb(self):
+    return vm.Vm.MEM_UNIT * self.mem_units
 
   def dict(self):
     return {

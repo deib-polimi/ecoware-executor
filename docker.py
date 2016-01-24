@@ -18,9 +18,9 @@ def create_container(docker_container):
   port = vm.docker_port
   name = docker_container.name
   image = get_image(name)
-  cpuset = docker_container.cpuset
-  mem = docker_container.mem
-  cmd = 'docker -H :{} exec -it docker-set docker run -it -d --cpuset-cpus={} -m={}g --name={} {}'.format(port, cpuset, mem, name, image)
+  cpuset = ','.join(map(str, docker_container.cpuset))
+  mem = docker_container.get_mem_mb()
+  cmd = 'docker -H :{} exec -it docker-set docker run -it -d --cpuset-cpus={} -m={}m --name={} {}'.format(port, cpuset, mem, name, image)
   subprocess.check_call(cmd.split())
   logging.info('vm={}:{}; docker run -it -d --cpuset-cpus={} -m={}g --name={} {}'.format(vm.name, port, cpuset, mem, name, image))
 

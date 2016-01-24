@@ -4,6 +4,7 @@
     var $btn = $(this);
     $btn.button('loading');
     vmId = $('#vm-combobox').val();
+    vmName = $('#vm-combobox option:selected').text()
     var data = {
       name: $('#container-name-combobox').val(),
       cpuset: $('#container-cpuset-input').val(),
@@ -16,8 +17,12 @@
       data: JSON.stringify(data), 
       success: function(resp) {
         $btn.button('reset');
-        $('#add-vm-modal').modal('hide');
-        toastr.success('VM {0} is created (time={1}s)'.format(resp.name, resp.time));
+        $('#add-container-modal').modal('hide');
+        resp.vm = {
+          id: vmId,
+          name: vmName
+        };
+        toastr.success('Container {0} is created on VM "{1}" (time={2}s)'.format(resp.name, resp.vm.name, resp.time));
         insert_row(resp);
       },
       error: function() {

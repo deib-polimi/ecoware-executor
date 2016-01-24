@@ -46,6 +46,9 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       post_data = json.loads(post_data_string)
       vm_id = int(args[-2])
       container = topologyManager.create_container(vm_id, post_data['name'], post_data['cpuset'], post_data['mem_units'])
+      response = post_data
+      response['mem'] = container.mem
+      response['id'] = container.id
     else:
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
       post_data = json.loads(post_data_string)
