@@ -58,7 +58,7 @@ def create_vm(name, cpu_cores, mem_units, host, port):
 def delete_vm(id):
   global _topology, _ports
   vm2remove = _topology[id]
-  if vm2remove in ['localhost', '127.0.0.1']:
+  if vm2remove.host in ['localhost', '127.0.0.1']:
     vm2remove.delete()
     del _ports[vm2remove.docker_port]
   db.delete_vm(id)
