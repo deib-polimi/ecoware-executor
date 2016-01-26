@@ -16,10 +16,12 @@ It has 3 branches: `csp`, `ilp` and `master`.
 
 ## How to package vagrant VM in box
 After packaging vm I got the error `"Warning: Authentication failure. Retrying... "`. To fix it we need some easy manipulations:
+
 1. Put in `Vagrantfile`
     ```
     config.ssh.insert_key = false
     ```
+
 2. Run the VM, ssh to it (password is `vagrant`) and add `vagrant.pub` to `authorise_keys`:
     ```
     vagrant up
@@ -30,6 +32,7 @@ After packaging vm I got the error `"Warning: Authentication failure. Retrying..
     chown -R vagrant:vagrant .ssh
     exit
     ```
+
 3. Get the VM id from VirtualBox with `vboxmanage list runningvms` and run:
     ```
     vagrant package --base ${HERE_YOUR_ID}
@@ -37,8 +40,10 @@ After packaging vm I got the error `"Warning: Authentication failure. Retrying..
     vagrant box add ${HERE_BOX_NAME} package.box
     rm package.box
     ```
+
 4. Remove this line from `Vagrantfile`
     ```
     config.ssh.insert_key = false
     ```
+    
 5. Remove `package.box`, add box name in `Vagrantfile` and `vagrant up`!
