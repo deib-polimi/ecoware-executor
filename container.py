@@ -9,7 +9,7 @@ class Container:
     self.id = id
     self.vm = vm
     self.name = name
-    self.cpuset = map(int, cpuset.split())
+    self.cpuset = cpuset
     self.mem_units = int(mem_units)
     self.mem = self.get_mem()
 

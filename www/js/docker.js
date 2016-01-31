@@ -7,7 +7,7 @@
     vmName = $('#vm-combobox option:selected').text();
     var data = {
       name: $('#container-name-combobox').val(),
-      cpuset: $('#container-cpuset-input').val(),
+      cpuset: $('#container-cpuset-input').val().split(',').map(Number),
       mem_units: parseInt($('#container-mem-input').val())
     };
     $.ajax({
