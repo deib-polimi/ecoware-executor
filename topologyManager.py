@@ -46,11 +46,14 @@ def get_next_docker_port():
 
 def create_vm(name, cpu_cores, mem_units, host, port):
   global _topology, _ports
-  if port == -1:
+  if not port or port == -1:
     port = get_next_docker_port()
+  if not host:
+    host = 'localhost'
   id = None
   new_vm = vm.Vm(id, name, cpu_cores, mem_units, host, port)
   if host in ('localhost', '127.0.0.1'):
+    host = 'localhost'
     new_vm.start()
     _ports[new_vm.docker_port] = new_vm
   id = db.insert_vm(new_vm)
@@ -133,15 +136,63 @@ def get_topology():
     new_topology[vm.name]['docker_port'] = vm.docker_port
     new_topology[vm.name]['cpu_cores'] = vm.cpu_cores
     new_topology[vm.name]['mem_units'] = vm.mem_units
+    containers = {}
     for container in vm.containers:
-      containers = {}
       new_topology[vm.name]['containers'] = containers
       containers[container.name] = collections.OrderedDict()
       containers[container.name]['cpuset'] = ','.join(map(str, container.cpuset))
       containers[container.name]['mem_units'] = container.mem_units
       containers[container.name]['scale_hooks'] = ['touch.sh']
-  logging.debug('topology={}'.format(new_topology))
   return new_topology
+
+def _map_topology_by_name():
+  new_topology = {}
+  for vm in _topology.values():
+    new_topology[vm.name] = vm
+  return new_topology
+
+def _map_containers_by_name(containers):
+  new_map = {}
+  for container in containers:
+    new_map[container.name] = container
+  return new_map
+
+def execute(plan):
+  topology_by_name = _map_topology_by_name()
+  for vm_name in plan:
+    is_local = False
+    plan_vm = plan[vm_name]
+    containers = {}
+    vm_obj = None
+    plan_containers = plan_vm.get('containers')
+    if not vm_name in topology_by_name:
+      # create vm
+      vm_obj = create_vm(vm_name, plan_vm['cpu_cores'], plan_vm['mem_units'], plan_vm.get('host'), plan_vm.get('docker_port'))
+    else:
+      vm_obj = topology_by_name[vm_name]
+      containers = _map_containers_by_name(vm_obj.containers)
+      for container in vm_obj.containers:
+        if (not plan_containers or 
+            not container.name in plan_containers):
+          # delete container
+          delete_container(container.id)
+
+    if 'containers' in plan_vm:
+      for container_name in plan_vm['containers']:
+        plan_container = plan_vm['containers'][container_name]
+        cpuset = map(int, plan_container['cpuset'].split(','))
+        mem_units = plan_container['mem_units']
+        if not container_name in containers:
+          # create container
+          run_container(vm_obj.id, container_name, cpuset, mem_units)
+        else:
+          # update container
+          container_obj = containers[container_name]
+          update_container(container_obj.id, cpuset, mem_units)
+  for vm in _topology.values():
+    if not vm.name in plan:
+      # delete vm
+      delete_vm(vm.id)
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
