@@ -57,6 +57,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       response = post_data
       response['mem'] = container.mem
       response['id'] = container.id
+      response['vm'] = container.vm.dict_flat()
     else:
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
       post_data = json.loads(post_data_string)

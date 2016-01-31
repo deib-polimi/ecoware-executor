@@ -46,6 +46,17 @@ class Vm:
       'containers': map(lambda x: x.dict(), self.containers)
     }
 
+  def dict_flat(self):
+    return {
+      'id': self.id,
+      'name': self.name,
+      'cpu_cores': self.cpu_cores,
+      'mem_units': self.mem_units,
+      'mem': self.get_mem(),
+      'host': self.host,
+      'docker_port': self.docker_port
+    }
+
   def __str__(self):
     return (self.id, self.name, self.cpu_cores, self.mem_units, '{}:{}'.format(self.host, self.docker_port)).__str__()
 

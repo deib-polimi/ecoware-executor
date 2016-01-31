@@ -18,10 +18,6 @@
       success: function(resp) {
         $btn.button('reset');
         $('#add-container-modal').modal('hide');
-        resp.vm = {
-          id: vmId,
-          name: vmName
-        };
         toastr.success('Container {0} is created on VM "{1}" (time={2}s)'.format(resp.name, resp.vm.name, resp.time));
         insert_row(resp);
       },
