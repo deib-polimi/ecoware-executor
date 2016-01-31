@@ -115,6 +115,8 @@ def update_container(id, cpuset, mem_units):
   for vm in _topology.values():
     for container in vm.containers:
       if container.id == id:
+        if not vm.host  in ['localhost', '127.0.0.1']:
+          raise Exception('Container update can not be run on remote host')
         container.update(cpuset, mem_units)
         db.update_container(container)
         return container

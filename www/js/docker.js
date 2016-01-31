@@ -145,7 +145,9 @@
     $('<button>').addClass('btn btn-default').text('Delete').click(onContainerDelete).appendTo($btnGroup);
     $('<button>').addClass('btn btn-default').text('Stop').click(onContainerStop).appendTo($btnGroup);
     $('<button>').addClass('btn btn-default').text('Start').click(onContainerStart).appendTo($btnGroup);
-    $('<button>').addClass('btn btn-default').text('Update').click(onModalSet).appendTo($btnGroup);
+    if (['127.0.0.1', 'localhost'].indexOf(container.vm.host) != -1) {
+      $('<button>').addClass('btn btn-default').text('Update').click(onModalSet).appendTo($btnGroup);
+    }
     $('<td>').append($btnGroup).appendTo($row);
     $row.appendTo($('#containers'));
     $row.data('container', container);
