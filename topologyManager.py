@@ -111,11 +111,11 @@ def delete_container(id):
       return
   raise Exception('Container id={} not found'.format(id))
 
-def set_container(id, cpuset, mem_units):
+def update_container(id, cpuset, mem_units):
   for vm in _topology.values():
     for container in vm.containers:
       if container.id == id:
-        container.set(cpuset, mem_units)
-        db.set_container(container)
+        container.update(cpuset, mem_units)
+        db.update_container(container)
         return container
   raise Exception('Container id={} not found'.format(id))

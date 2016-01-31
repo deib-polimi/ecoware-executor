@@ -31,8 +31,8 @@ class Container:
   def get_mem_mb(self):
     return vm.Vm.MEM_UNIT * self.mem_units
 
-  def set(self, cpuset, mem_units):
-    docker.set_container(self, cpuset, vm.Vm.MEM_UNIT * mem_units)
+  def update(self, cpuset, mem_units):
+    docker.update_container(self, cpuset, vm.Vm.MEM_UNIT * mem_units)
     self.cpuset = cpuset
     self.mem_units = mem_units
     self.mem = self.get_mem()

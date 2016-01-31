@@ -50,7 +50,7 @@ def delete_container(id):
   finally:
     con.close()
 
-def set_container(container):
+def update_container(container):
   conn = get_connection()
   try:
     cpuset = ','.join(map(str, container.cpuset))

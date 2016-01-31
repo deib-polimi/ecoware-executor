@@ -98,7 +98,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     put_data = json.loads(put_data_string)
     cpuset = put_data['cpuset']
     mem = put_data['mem_units']
-    container = topologyManager.set_container(container_id, cpuset, mem)
+    container = topologyManager.update_container(container_id, cpuset, mem)
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
     self.end_headers()
