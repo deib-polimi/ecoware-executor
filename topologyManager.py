@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import collections
 
 import vm
 import db
@@ -20,7 +21,8 @@ def init():
     for row in conn.execute('select * from vm'):
       new_vm = vm.Vm(row[0], row[1], row[2], row[3], row[4], row[5])
       for subrow in conn.execute('select * from container where vm_id = ?', (new_vm.id,)):
-        docker = Container(subrow[0], new_vm, subrow[2], subrow[3], subrow[4])
+        cpuset = map(int, subrow[3].split(','))
+        docker = Container(subrow[0], new_vm, subrow[2], cpuset, subrow[4])
         new_vm.containers.append(docker)
         logging.debug('container loaded={} for vm={}'.format(docker, new_vm.id))
       _topology[new_vm.id] = new_vm
@@ -123,22 +125,25 @@ def update_container(id, cpuset, mem_units):
         return container
   raise Exception('Container id={} not found'.format(id))
 
-def get_host_topology():
-  host_map = {}
+def get_topology():
+  new_topology = {}
   for vm in _topology.values():
-    if not vm.host in host_map:
-      host_map[vm.host] = {}
-    host_map[vm.host][vm.name] = {}
+    new_topology[vm.name] = collections.OrderedDict()
+    new_topology[vm.name]['host'] = vm.host
+    new_topology[vm.name]['docker_port'] = vm.docker_port
+    new_topology[vm.name]['cpu_cores'] = vm.cpu_cores
+    new_topology[vm.name]['mem_units'] = vm.mem_units
     for container in vm.containers:
-      host_map[vm.host][vm.name][container.name] = {
-        'cpuset': map(int, container.cpuset.split(',')),
-        'mem_units': container.mem_units,
-        'scale_hooks': ['touch.sh']
-      }
-  logging.debug('host_map={}'.format(host_map))
-  return host_map
+      containers = {}
+      new_topology[vm.name]['containers'] = containers
+      containers[container.name] = collections.OrderedDict()
+      containers[container.name]['cpuset'] = ','.join(map(str, container.cpuset))
+      containers[container.name]['mem_units'] = container.mem_units
+      containers[container.name]['scale_hooks'] = ['touch.sh']
+  logging.debug('topology={}'.format(new_topology))
+  return new_topology
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
   init()
-  get_host_topology()
+  get_topology()
