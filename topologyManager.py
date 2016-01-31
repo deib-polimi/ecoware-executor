@@ -9,7 +9,8 @@ from db import get_connection
 from container import Container
 
 
-_topology = {}
+_topology = {} # id->vm
+
 _ports = {}
 
 def init():
@@ -121,3 +122,23 @@ def update_container(id, cpuset, mem_units):
         db.update_container(container)
         return container
   raise Exception('Container id={} not found'.format(id))
+
+def get_host_topology():
+  host_map = {}
+  for vm in _topology.values():
+    if not vm.host in host_map:
+      host_map[vm.host] = {}
+    host_map[vm.host][vm.name] = {}
+    for container in vm.containers:
+      host_map[vm.host][vm.name][container.name] = {
+        'cpuset': map(int, container.cpuset.split(',')),
+        'mem_units': container.mem_units,
+        'scale_hooks': ['touch.sh']
+      }
+  logging.debug('host_map={}'.format(host_map))
+  return host_map
+
+if __name__ == '__main__':
+  logging.basicConfig(level=logging.DEBUG)
+  init()
+  get_host_topology()

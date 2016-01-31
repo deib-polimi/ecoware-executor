@@ -27,6 +27,13 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       response = sorted(map(lambda x: x.dict(), vms), key=id)
       self.wfile.write(json.dumps(response))
       return
+    elif self.path.startswith('/api/topology'):
+      hosts = topologyManager.get_host_topology()
+      self.send_response(200)
+      self.send_header('Content-type', 'application/json')
+      self.end_headers()
+      self.wfile.write(json.dumps(hosts))
+      return
     else:
       self.path = '/www' + self.path
     return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
