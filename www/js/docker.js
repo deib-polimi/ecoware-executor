@@ -121,7 +121,8 @@
           var memText = '{0} ({1}gb)'.format(container.mem_units, container.mem);
           $td = $row.children('td:nth-child(5)').text(memText);
           $('#set-container-modal').modal('hide');
-          toastr.success('Container "{0}" set cpuset={1} and mem={2}gb'.format(container.name, container.cpuset, container.mem));
+          toastr.success('Container "{0}" set cpuset={1} and mem={2}gb in {3}s'.format(container.name, container.cpuset, 
+            container.mem, response.time));
         },
         error: function() {
           var msg = 'Error set container "{0}"" on VM "{1}"'.format(container.name, vm.name);
