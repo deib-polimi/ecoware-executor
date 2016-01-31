@@ -16,8 +16,9 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     if self.path == '/':
       self.path = '/www/index.html'
     elif self.path.startswith('/docker'):
-      args = self.path.split('/')
       self.path = '/www/docker.html'
+    elif self.path.startswith('/vm'):
+      self.path = '/www/vm.html'
     elif self.path.startswith('/api/vm'):
       vms = topologyManager.get_vms()
       self.send_response(200)

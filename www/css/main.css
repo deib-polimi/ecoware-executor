@@ -1,9 +1,6 @@
 .workspace {
-  position: absolute;
-  top: 120px;
-  bottom: 20px;
-  left: 0px;
-  right: 0px;
+  margin-left: 100px;
+  margin-right: 100px;
 }
 
 .hidden {
@@ -12,9 +9,13 @@
 }
 
 .page-header {
-  margin: 70px 0 32px 78px  !important;
+  margin: 70px 100px 32px 115px  !important;
 }
 
+.navbar > .container-fluid {
+  margin-left: 100px;
+  margin-right: 100px;
+}
 .navbar-nav > li > a.active {
   color: #fff;
   cursor: default;
@@ -22,4 +23,9 @@
 
 .form-group > label > span {
   color: red;
+}
+
+.plan-textarea {
+  width: 800px;
+  height: 600px;
 }
