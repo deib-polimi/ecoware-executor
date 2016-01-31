@@ -21,7 +21,7 @@ def run_container(docker_container):
   image = get_image(name)
   cpuset = ','.join(map(str, docker_container.cpuset))
   mem = docker_container.get_mem_mb()
-  cmd = 'docker -H {}:{} exec -it docker-set docker run -it -d --cpuset-cpus={} -m={}m --name={} {}'.format(host, port, cpuset, mem, name, image)
+  cmd = 'docker -H {}:{} exec -it docker-set docker run -it -d --cpuset-cpus={} -m={}m --name={} -v=/vagrant:/vagrant {}'.format(host, port, cpuset, mem, name, image)
   subprocess.check_call(cmd.split())
   logging.info('docker -H {}:{} run -it -d --cpuset-cpus={} -m={}m --name={} {}'.format(host, port, cpuset, mem, name, image))
 
@@ -63,6 +63,7 @@ def set_container(container, cpuset, mem_mb):
   cmd = 'docker -H {}:{} exec -it docker-set docker set --cpuset-cpus={} -m={}m {}'.format(host, port, cpuset_string, mem_mb, container.name)
   subprocess.check_call(cmd.split())
   logging.info('docker -H {}:{} set -cpuset={} -m={}m {}'.format(host, port, cpuset_string, mem_mb, container.name))
+  
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)

@@ -40,6 +40,11 @@ def create_vm(new_vm):
   with open('{}/Vagrantfile'.format(path), 'w') as f:
     f.write(txt)
   cwd = os.getcwd()
+  try:
+    shutil.copytree('virtualization/scale-hooks', '{}/scale_hooks'.format(path))
+  except:
+    pass
+  
   os.chdir(path)
   try:
     cmd = 'vagrant up'
