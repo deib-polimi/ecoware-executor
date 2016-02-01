@@ -35,6 +35,9 @@ def insert_container(container):
     cur.execute('insert into container (vm_id, name, cpuset, mem) values (?, ?, ?, ?)', 
       (container.vm.id, container.name, cpuset, container.mem_units))
     id = cur.lastrowid
+    for hook in container.scale_hooks:
+      cur.execute('insert into scale_hook (container_id, hook) values (?, ?)',
+        (id, hook))
     con.commit()
     return id
   finally:
@@ -51,10 +54,15 @@ def delete_container(id):
     con.close()
 
 def update_container(container):
-  conn = get_connection()
+  con = get_connection()
   try:
     cpuset = ','.join(map(str, container.cpuset))
-    conn.execute('update container set cpuset = ?, mem = ? where id = ?', (cpuset, container.mem, container.id))
-    conn.commit()
+    cur = con.cursor()
+    cur.execute('update container set cpuset = ?, mem = ? where id = ?', (cpuset, container.mem, container.id))
+    cur.execute('delete from scale_hook where container_id = ?', (container.id,))
+    for hook in container.scale_hooks:
+      cur.execute('insert into scale_hook (container_id, hook) values (?, ?)',
+        (container.id, hook))
+    con.commit()
   finally:
-    conn.close()
+    con.close()

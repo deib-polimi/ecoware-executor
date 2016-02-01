@@ -21,8 +21,11 @@ def init():
     for row in conn.execute('select * from vm'):
       new_vm = vm.Vm(row[0], row[1], row[2], row[3], row[4], row[5])
       for subrow in conn.execute('select * from container where vm_id = ?', (new_vm.id,)):
+        scale_hooks = []
+        for hook_row in conn.execute('select * from scale_hook where container_id = ?', (subrow[0],)):
+          scale_hooks.append(hook_row)
         cpuset = map(int, subrow[3].split(','))
-        docker = Container(subrow[0], new_vm, subrow[2], cpuset, subrow[4])
+        docker = Container(subrow[0], new_vm, subrow[2], cpuset, subrow[4], scale_hooks)
         new_vm.containers.append(docker)
         logging.debug('container loaded={} for vm={}'.format(docker, new_vm.id))
       _topology[new_vm.id] = new_vm
@@ -78,10 +81,10 @@ def start_vm(id):
   vm2start = _topology[id]
   vm2start.start()
 
-def run_container(vm_id, name, cpuset, mem_units):
+def run_container(vm_id, name, cpuset, mem_units, scale_hooks):
   container_vm = _topology[vm_id]
   id = None
-  new_container = Container(id, container_vm, name, cpuset, mem_units)
+  new_container = Container(id, container_vm, name, cpuset, mem_units, scale_hooks)
   new_container.run()
   id = db.insert_container(new_container)
   new_container.id = id
@@ -117,13 +120,13 @@ def delete_container(id):
       return
   raise Exception('Container id={} not found'.format(id))
 
-def update_container(id, cpuset, mem_units):
+def update_container(id, cpuset, mem_units, scale_hooks):
   for vm in _topology.values():
     for container in vm.containers:
       if container.id == id:
         if not vm.host  in ['localhost', '127.0.0.1']:
           raise Exception('Container update can not be run on remote host')
-        container.update(cpuset, mem_units)
+        container.update(cpuset, mem_units, scale_hooks)
         db.update_container(container)
         return container
   raise Exception('Container id={} not found'.format(id))
@@ -142,7 +145,6 @@ def get_topology():
       containers[container.name] = collections.OrderedDict()
       containers[container.name]['cpuset'] = ','.join(map(str, container.cpuset))
       containers[container.name]['mem_units'] = container.mem_units
-      containers[container.name]['scale_hooks'] = ['touch.sh']
   return new_topology
 
 def _map_topology_by_name():
@@ -182,13 +184,14 @@ def execute(plan):
         plan_container = plan_vm['containers'][container_name]
         cpuset = map(int, plan_container['cpuset'].split(','))
         mem_units = plan_container['mem_units']
+        scale_hooks = plan_container.get('scale_hooks')
         if not container_name in containers:
           # create container
-          run_container(vm_obj.id, container_name, cpuset, mem_units)
+          run_container(vm_obj.id, container_name, cpuset, mem_units, scale_hooks)
         else:
           # update container
           container_obj = containers[container_name]
-          update_container(container_obj.id, cpuset, mem_units)
+          update_container(container_obj.id, cpuset, mem_units, scale_hooks)
   for vm in _topology.values():
     if not vm.name in plan:
       # delete vm
