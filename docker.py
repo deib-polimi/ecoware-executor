@@ -69,7 +69,12 @@ def update_container(container, cpuset, mem_mb):
   cpuset_string = ','.join(map(str, cpuset))
   cmd = 'docker run -it n43jl/docker-update docker -H {}:{} update --cpuset-cpus={} -m={}m {}'.format(host, port, cpuset_string, mem_mb, container.name)
   subprocess.check_call(cmd.split())
-  logging.info('docker -H {}:{} update -cpuset={} -m={}m {}'.format(host, port, cpuset_string, mem_mb, container.name))
+  logging.info(cmd)
+  print container.scale_hooks
+  for hook in container.scale_hooks:
+    cmd = 'docker -H {}:{} exec {} sh -c "cd /vagrant/scale_hooks && ./{}"'.format(host, port, container.name, hook)
+    subprocess.check_output(cmd, shell=True)
+    logging.info(cmd)
   
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
