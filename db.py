@@ -49,6 +49,7 @@ def delete_container(id):
   try:
     cur = con.cursor()
     cur.execute('delete from container where id = ?', (id,))
+    cur.execute('delete from scale_hook where container_id = ?', (id,))
     con.commit()
   finally:
     con.close()
