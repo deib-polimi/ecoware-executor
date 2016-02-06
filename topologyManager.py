@@ -23,7 +23,9 @@ def init():
       for subrow in conn.execute('select * from container where vm_id = ?', (new_vm.id,)):
         scale_hooks = []
         for hook_row in conn.execute('select * from scale_hook where container_id = ?', (subrow[0],)):
-          scale_hooks.append(hook_row)
+          print hook_row[0], hook_row[1], hook_row[2]
+          scale_hooks.append(hook_row[2])
+
         cpuset = map(int, subrow[3].split(','))
         docker = Container(subrow[0], new_vm, subrow[2], cpuset, subrow[4], scale_hooks)
         new_vm.containers.append(docker)
@@ -145,6 +147,9 @@ def get_topology():
       containers[container.name] = collections.OrderedDict()
       containers[container.name]['cpuset'] = ','.join(map(str, container.cpuset))
       containers[container.name]['mem_units'] = container.mem_units
+      containers[container.name]['scale_hooks'] = []
+      for scale_hook in container.scale_hooks:
+        containers[container.name]['scale_hooks'].append(scale_hook)
   return new_topology
 
 def _map_topology_by_name():
