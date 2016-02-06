@@ -29,6 +29,8 @@ function do_run
   colour_stringln $green "[OK]"
 }
 
+git pull
+
 version="$(sqlite3 executor.db 'select version from db_version')"
 while :
 do
