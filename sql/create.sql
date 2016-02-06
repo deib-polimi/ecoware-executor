@@ -24,3 +24,18 @@ create table scale_hook (
   unique(container_id, hook),
   foreign key (container_id) references container (id)
 );
+
+create table db_version (
+  id integer primary key,
+  version integer not null
+);
+
+create table tier_hook (
+  id integer primary key,
+  container_id integer not null,
+  hook varchar(255) not null,
+  unique(container_id, hook),
+  foreign key (container_id) references container (id)
+);
+
+insert into db_version (version) values (4);
