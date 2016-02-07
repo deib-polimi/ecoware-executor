@@ -12,13 +12,18 @@ from tier import Tier
 
 
 _topology = {} # id->vm
-
+_tiers = {}
 _ports = {}
 
 def init():
-  global _topology, _ports
+  global _topology, _ports, _tiers
   conn = get_connection()
   try:
+    for row in conn.execute('select * from tier'):
+      depends_on = []
+      tier_hooks = []
+      new_tier = Tier(row[0], row[1], row[2], depends_on, tier_hooks)
+      _tiers[row[1]] = new_tier
     for row in conn.execute('select * from vm'):
       new_vm = vm.Vm(row[0], row[1], row[2], row[3], row[4], row[5])
       for subrow in conn.execute('select * from container where vm_id = ?', (new_vm.id,)):
@@ -136,6 +141,16 @@ def update_container(id, cpuset, mem_units, scale_hooks):
 
 def get_topology():
   result = {}
+
+  result['tiers'] = collections.OrderedDict()
+  for tier_name in _tiers:
+    ex_tier = _tiers[tier_name]
+    result['tiers'][tier_name] = {
+      'image': ex_tier.image,
+      'depends_on': ex_tier.depends_on,
+      'tier_hooks': ex_tier.tier_hooks
+    }
+
   new_topology = {}
   result['plan'] = new_topology
   for vm in _topology.values():
@@ -174,6 +189,8 @@ def execute(data):
   _execute_plan(plan)
 
 def _parse_tiers(tiers):
+  global _tiers
+  _tiers.clear()
   db.delete_tiers()
   if tiers is not None:
     for name in tiers:
@@ -183,6 +200,7 @@ def _parse_tiers(tiers):
       id = None
       new_tier = Tier(id, name, image, depends_on, tier_hooks)
       db.insert_tier(new_tier)
+      _tiers[name] = new_tier
 
 def _execute_plan(plan):
   topology_by_name = _map_topology_by_name()  
