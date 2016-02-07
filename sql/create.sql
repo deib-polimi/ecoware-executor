@@ -30,18 +30,18 @@ create table db_version (
   version integer not null
 );
 
-create table tier_hook (
-  id integer primary key,
-  container_id integer not null,
-  hook varchar(255) not null,
-  unique(container_id, hook),
-  foreign key (container_id) references container (id)
-);
-
 create table tier (
   id integer primary key,
   name varchar(255) unique not null,
   image varchar(255) not null
 );
 
-insert into db_version (version) values (5);
+create table tier_hook (
+  id integer primary key,
+  tier_id integer not null,
+  hook varchar(255) not null,
+  unique(tier_id, hook),
+  foreign key (tier_id) references tier (id)
+);
+
+insert into db_version (version) values (6);

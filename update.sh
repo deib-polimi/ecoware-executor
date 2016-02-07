@@ -31,6 +31,9 @@ function do_run
 
 git pull
 
+now=$(date +"%d_%m_%Y")
+cp executor.db ../executor_$now.db.bak
+
 version="$(sqlite3 executor.db 'select version from db_version')"
 while :
 do

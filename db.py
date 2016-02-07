@@ -75,6 +75,9 @@ def insert_tier(tier):
     cur.execute('insert into tier (name, image) values (?, ?)', 
       (tier.name, tier.image))
     tier.id = cur.lastrowid
+    for hook in tier.tier_hooks:
+      cur.execute('insert into tier_hook (tier_id, hook) values(?, ?)',
+        (tier.id, hook))
     con.commit()
     return tier.id
   finally:
@@ -86,6 +89,7 @@ def delete_tiers():
   try:
     cur = con.cursor()
     cur.execute('delete from tier')
+    cur.execute('delete from tier_hook')
     con.commit()
     return
   finally:

@@ -3,7 +3,7 @@
 
 import logging
 import collections
-from set import Set
+from sets import Set
 
 import vm
 import db
@@ -21,8 +21,14 @@ def init():
   conn = get_connection()
   try:
     for row in conn.execute('select * from tier'):
-      depends_on = []
+
       tier_hooks = []
+      for subrow in conn.execute('select * from tier_hook where tier_id = ?', (row[0],)):
+        tier_hooks.append(subrow[2])
+
+      depends_on = []
+
+      
       new_tier = Tier(row[0], row[1], row[2], depends_on, tier_hooks)
       _tiers[row[1]] = new_tier
     for row in conn.execute('select * from vm'):
@@ -146,11 +152,10 @@ def get_topology():
   result['tiers'] = collections.OrderedDict()
   for tier_name in _tiers:
     ex_tier = _tiers[tier_name]
-    result['tiers'][tier_name] = {
-      'image': ex_tier.image,
-      'depends_on': ex_tier.depends_on,
-      'tier_hooks': ex_tier.tier_hooks
-    }
+    result['tiers'][tier_name] = collections.OrderedDict()
+    result['tiers'][tier_name]['image'] = ex_tier.image
+    result['tiers'][tier_name]['depends_on'] = ex_tier.depends_on
+    result['tiers'][tier_name]['tier_hooks'] = ex_tier.tier_hooks
 
   new_topology = {}
   result['plan'] = new_topology
@@ -243,7 +248,7 @@ def _execute_plan(plan):
         else:
           # update container
           container_obj = containers[container_name]
-          if cpuset != container_obj.cpuset and mem_units !+ container_obj.mem_units:
+          if cpuset != container_obj.cpuset and mem_units != container_obj.mem_units:
             update_container(container_obj.id, cpuset, mem_units, scale_hooks)
             changed.add(container_obj.name)
   for vm in _topology.values():
