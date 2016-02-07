@@ -3,15 +3,7 @@
 import subprocess
 import logging
 
-def get_image(app):
-  image = ''
-  if app == 'jboss':
-    image = 'httpd'
-  elif app == 'db':
-    image = 'nginx'
-  else:
-    raise Exception('Unknown app: {}'.format(app))
-  return image
+import topologyManager
 
 def _get_host_ip():
   cmd = "ip addr | awk '/docker0/ { print $0 }' | awk '/inet/ { print $2 }'"
@@ -20,11 +12,12 @@ def _get_host_ip():
   return host
 
 def run_container(docker_container):
+  logging.debug('run container')
   vm = docker_container.vm
   host = vm.host
   port = vm.docker_port
   name = docker_container.name
-  image = get_image(name)
+  image = topologyManager.get_tier_image(name)
   cpuset = ','.join(map(str, docker_container.cpuset))
   mem = docker_container.get_mem_mb()
   cmd = 'docker -H {}:{} run -it -d --cpuset-cpus={} -m={}m --name={} -v=/vagrant:/vagrant {}'.format(host, port, cpuset, mem, name, image)

@@ -39,6 +39,9 @@ class Container:
     self.mem = self.get_mem()
     self.scale_hooks = scale_hooks if scale_hooks else []
 
+  def run_tier_hooks(self):
+    print 'RUN TIER HOOKS'
+
   def dict(self):
     return {
       'id': self.id,

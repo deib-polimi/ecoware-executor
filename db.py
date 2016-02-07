@@ -79,7 +79,6 @@ def insert_tier(tier):
       cur.execute('insert into tier_hook (tier_id, hook) values(?, ?)',
         (tier.id, hook))
     for dependency in tier.depends_on:
-      print dependency
       cur.execute('insert into dependency (from_tier_id, to_tier_name) values (?, ?)',
         (tier.id, dependency))
     con.commit()

@@ -37,7 +37,6 @@ def init():
       for subrow in conn.execute('select * from container where vm_id = ?', (new_vm.id,)):
         scale_hooks = []
         for hook_row in conn.execute('select * from scale_hook where container_id = ?', (subrow[0],)):
-          print hook_row[0], hook_row[1], hook_row[2]
           scale_hooks.append(hook_row[2])
 
         cpuset = map(int, subrow[3].split(','))
@@ -197,7 +196,15 @@ def execute(data):
   _process_tier_hooks(changed_containers)
 
 def _process_tier_hooks(changed):
-  pass
+  tiers_to_run_hooks = Set()
+  for tier in _tiers.values():
+    for dependency in tier.depends_on:
+      if dependency in changed:
+        tiers_to_run_hooks.add(tier.name)
+  for vm in _topology.values():
+    for container in vm.containers:
+      if container.name in tiers_to_run_hooks:
+        container.run_tier_hooks()
 
 def _parse_tiers(tiers):
   global _tiers
@@ -256,10 +263,12 @@ def _execute_plan(plan):
     if not vm.name in plan:
       # delete vm
       delete_vm(vm.id)
-      vm_obj = topology_by_name[vm_name]
-      for container_obj in vm_obj.containers:
+      for container_obj in vm.containers:
         changed.add(container.name)
   return changed
+
+def get_tier_image(tier):
+  return _tiers[tier].image
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
