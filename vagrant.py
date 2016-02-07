@@ -41,7 +41,8 @@ def create_vm(new_vm):
     f.write(txt)
   cwd = os.getcwd()
   try:
-    shutil.copytree('virtualization/scale-hooks', '{}/scale_hooks'.format(path))
+    shutil.copytree('virtualization/scale_hooks', '{}/scale_hooks'.format(path))
+    shutil.copytree('virtualization/tier_hooks', '{}/tier_hooks'.format(path))
   except:
     pass
   

@@ -199,12 +199,13 @@ def _process_tier_hooks(changed):
   tiers_to_run_hooks = Set()
   for tier in _tiers.values():
     for dependency in tier.depends_on:
-      if dependency in changed:
+      if tier.tier_hooks and dependency in changed:
         tiers_to_run_hooks.add(tier.name)
   for vm in _topology.values():
     for container in vm.containers:
       if container.name in tiers_to_run_hooks:
-        container.run_tier_hooks()
+        hooks = _tiers[container.name].tier_hooks
+        container.run_tier_hooks(hooks)
 
 def _parse_tiers(tiers):
   global _tiers
@@ -252,18 +253,18 @@ def _execute_plan(plan):
         if not container_name in containers:
           # create container
           run_container(vm_obj.id, container_name, cpuset, mem_units, scale_hooks)
-          changed.add(container.name)
+          changed.add(container_name)
         else:
           # update container
           container_obj = containers[container_name]
-          if cpuset != container_obj.cpuset and mem_units != container_obj.mem_units:
+          if cpuset != container_obj.cpuset or mem_units != container_obj.mem_units:
             update_container(container_obj.id, cpuset, mem_units, scale_hooks)
             changed.add(container_obj.name)
   for vm in _topology.values():
     if not vm.name in plan:
       # delete vm
       delete_vm(vm.id)
-      for container_obj in vm.containers:
+      for container in vm.containers:
         changed.add(container.name)
   return changed
 
