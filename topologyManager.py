@@ -27,7 +27,8 @@ def init():
         tier_hooks.append(subrow[2])
 
       depends_on = []
-
+      for subrow in conn.execute('select * from dependency where from_tier_id = ?', (row[0],)):
+        depends_on.append(subrow[2])
       
       new_tier = Tier(row[0], row[1], row[2], depends_on, tier_hooks)
       _tiers[row[1]] = new_tier
