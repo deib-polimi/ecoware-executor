@@ -3,6 +3,7 @@
 
 import logging
 import collections
+from set import Set
 
 import vm
 import db
@@ -186,7 +187,11 @@ def execute(data):
   tiers = data.get('tiers')
   _parse_tiers(tiers)
   plan = data['plan']
-  _execute_plan(plan)
+  changed_containers = _execute_plan(plan)
+  _process_tier_hooks(changed_containers)
+
+def _process_tier_hooks(changed):
+  pass
 
 def _parse_tiers(tiers):
   global _tiers
@@ -203,6 +208,7 @@ def _parse_tiers(tiers):
       _tiers[name] = new_tier
 
 def _execute_plan(plan):
+  changed = Set()
   topology_by_name = _map_topology_by_name()  
   for vm_name in plan:
     is_local = False
@@ -220,6 +226,7 @@ def _execute_plan(plan):
         if (not plan_containers or 
             not container.name in plan_containers):
           # delete container
+          changed.add(container.name)
           delete_container(container.id)
 
     if 'containers' in plan_vm:
@@ -232,14 +239,21 @@ def _execute_plan(plan):
         if not container_name in containers:
           # create container
           run_container(vm_obj.id, container_name, cpuset, mem_units, scale_hooks)
+          changed.add(container.name)
         else:
           # update container
           container_obj = containers[container_name]
-          update_container(container_obj.id, cpuset, mem_units, scale_hooks)
+          if cpuset != container_obj.cpuset and mem_units !+ container_obj.mem_units:
+            update_container(container_obj.id, cpuset, mem_units, scale_hooks)
+            changed.add(container_obj.name)
   for vm in _topology.values():
     if not vm.name in plan:
       # delete vm
       delete_vm(vm.id)
+      vm_obj = topology_by_name[vm_name]
+      for container_obj in vm_obj.containers:
+        changed.add(container.name)
+  return changed
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
