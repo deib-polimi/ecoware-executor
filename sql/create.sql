@@ -44,4 +44,14 @@ create table tier_hook (
   foreign key (tier_id) references tier (id)
 );
 
-insert into db_version (version) values (6);
+create table dependency (
+  id integer primary key,
+  from_tier_id integer not null,
+  to_tier_name varchar(255) not null,
+  unique(from_tier_id, to_tier_name),
+  foreign key (from_tier_id) references tier (id)
+);
+
+# need to create indexes
+
+insert into db_version (version) values (7);
