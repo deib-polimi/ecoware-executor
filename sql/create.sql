@@ -52,6 +52,4 @@ create table dependency (
   foreign key (from_tier_id) references tier (id)
 );
 
-# need to create indexes
-
 insert into db_version (version) values (7);
