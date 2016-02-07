@@ -38,4 +38,10 @@ create table tier_hook (
   foreign key (container_id) references container (id)
 );
 
-insert into db_version (version) values (4);
+create table tier (
+  id integer primary key,
+  name varchar(255) unique not null,
+  image varchar(255) not null
+);
+
+insert into db_version (version) values (5);

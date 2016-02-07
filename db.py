@@ -15,7 +15,7 @@ def insert_vm(vm):
     return id
   finally:
     con.close()
-  raise Error('Insert VM error')
+  raise Exception('Insert VM error')
 
 def delete_vm(id):
   con = get_connection()
@@ -42,7 +42,7 @@ def insert_container(container):
     return id
   finally:
     con.close()
-  raise Error('Insert container error')
+  raise Exception('Insert container error')
 
 def delete_container(id):
   con = get_connection()
@@ -67,3 +67,27 @@ def update_container(container):
     con.commit()
   finally:
     con.close()
+
+def insert_tier(tier):
+  con = get_connection()
+  try:
+    cur = con.cursor()
+    cur.execute('insert into tier (name, image) values (?, ?)', 
+      (tier.name, tier.image))
+    tier.id = cur.lastrowid
+    con.commit()
+    return tier.id
+  finally:
+    con.close()
+  raise Exception('Insert tier error')
+
+def delete_tiers():
+  con = get_connection()
+  try:
+    cur = con.cursor()
+    cur.execute('delete from tier')
+    con.commit()
+    return
+  finally:
+    con.close()
+  raise Exception('Delete tiers error')

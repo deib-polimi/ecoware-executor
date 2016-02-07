@@ -8,6 +8,7 @@ import vm
 import db
 from db import get_connection
 from container import Container
+from tier import Tier
 
 
 _topology = {} # id->vm
@@ -134,7 +135,9 @@ def update_container(id, cpuset, mem_units, scale_hooks):
   raise Exception('Container id={} not found'.format(id))
 
 def get_topology():
+  result = {}
   new_topology = {}
+  result['plan'] = new_topology
   for vm in _topology.values():
     new_topology[vm.name] = collections.OrderedDict()
     new_topology[vm.name]['host'] = vm.host
@@ -150,7 +153,7 @@ def get_topology():
       containers[container.name]['scale_hooks'] = []
       for scale_hook in container.scale_hooks:
         containers[container.name]['scale_hooks'].append(scale_hook)
-  return new_topology
+  return result
 
 def _map_topology_by_name():
   new_topology = {}
@@ -164,8 +167,25 @@ def _map_containers_by_name(containers):
     new_map[container.name] = container
   return new_map
 
-def execute(plan):
-  topology_by_name = _map_topology_by_name()
+def execute(data):
+  tiers = data.get('tiers')
+  _parse_tiers(tiers)
+  plan = data['plan']
+  _execute_plan(plan)
+
+def _parse_tiers(tiers):
+  db.delete_tiers()
+  if tiers is not None:
+    for name in tiers:
+      image = tiers[name]['image']
+      depends_on = tiers[name].get('depends_on')
+      tier_hooks = tiers[name].get('tier_hooks')
+      id = None
+      new_tier = Tier(id, name, image, depends_on, tier_hooks)
+      db.insert_tier(new_tier)
+
+def _execute_plan(plan):
+  topology_by_name = _map_topology_by_name()  
   for vm_name in plan:
     is_local = False
     plan_vm = plan[vm_name]
@@ -190,6 +210,7 @@ def execute(plan):
         cpuset = map(int, plan_container['cpuset'].split(','))
         mem_units = plan_container['mem_units']
         scale_hooks = plan_container.get('scale_hooks')
+        
         if not container_name in containers:
           # create container
           run_container(vm_obj.id, container_name, cpuset, mem_units, scale_hooks)
