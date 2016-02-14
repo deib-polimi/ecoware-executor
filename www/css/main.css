@@ -1,7 +1,3 @@
-.workspace {
-  margin-left: 100px;
-  margin-right: 100px;
-}
 
 .hidden {
   position: absolute; 
@@ -25,9 +21,9 @@
   color: red;
 }
 
-.plan-textarea {
-  width: 800px;
-  height: 600px;
+.textarea {
+  width: 600px;
+  height: 400px;
 }
 
 .workspace-btn {
