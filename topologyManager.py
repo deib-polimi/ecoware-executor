@@ -146,17 +146,8 @@ def update_container(id, cpuset, mem_units, scale_hooks):
         return container
   raise Exception('Container id={} not found'.format(id))
 
-def get_topology():
+def get_allocation():
   result = {}
-
-  result['tiers'] = collections.OrderedDict()
-  for tier_name in _tiers:
-    ex_tier = _tiers[tier_name]
-    result['tiers'][tier_name] = collections.OrderedDict()
-    result['tiers'][tier_name]['image'] = ex_tier.image
-    result['tiers'][tier_name]['depends_on'] = ex_tier.depends_on
-    result['tiers'][tier_name]['tier_hooks'] = ex_tier.tier_hooks
-
   new_topology = {}
   result['plan'] = new_topology
   for vm in _topology.values():
@@ -174,6 +165,24 @@ def get_topology():
       containers[container.name]['scale_hooks'] = []
       for scale_hook in container.scale_hooks:
         containers[container.name]['scale_hooks'].append(scale_hook)
+  return result
+
+def get_topology():
+  result = {}
+  app = collections.OrderedDict()
+  result['app'] = app
+  app['name'] = 'Ecoware'
+  tiers = collections.OrderedDict()
+  app['tiers'] = tiers
+  for tier_name in _tiers:
+    ex_tier = _tiers[tier_name]
+    tier = collections.OrderedDict()
+    tiers[tier_name] = tier
+    tier['image'] = ex_tier.image
+    if ex_tier.depends_on:
+      tier['depends_on'] = ex_tier.depends_on
+    if ex_tier.tier_hooks:
+      tier['tier_hooks'] = ex_tier.tier_hooks
   return result
 
 def _map_topology_by_name():

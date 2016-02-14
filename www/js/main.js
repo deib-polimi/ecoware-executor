@@ -4,6 +4,11 @@
     'use strict';
     $.get('/api/topology', function(resp) {
       var json = JSON.stringify(resp, null, '\t');
+      $('#tier-area').text(json);
+    });
+
+    $.get('/api/allocation', function(resp) {
+      var json = JSON.stringify(resp, null, '\t');
       $('#plan-area').text(json);
     });
 
