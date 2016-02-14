@@ -35,9 +35,6 @@ def insert_container(container):
     cur.execute('insert into container (vm_id, name, cpuset, mem) values (?, ?, ?, ?)', 
       (container.vm.id, container.name, cpuset, container.mem_units))
     id = cur.lastrowid
-    for hook in container.scale_hooks:
-      cur.execute('insert into scale_hook (container_id, hook) values (?, ?)',
-        (id, hook))
     con.commit()
     return id
   finally:
@@ -49,7 +46,6 @@ def delete_container(id):
   try:
     cur = con.cursor()
     cur.execute('delete from container where id = ?', (id,))
-    cur.execute('delete from scale_hook where container_id = ?', (id,))
     con.commit()
   finally:
     con.close()
@@ -60,10 +56,6 @@ def update_container(container):
     cpuset = ','.join(map(str, container.cpuset))
     cur = con.cursor()
     cur.execute('update container set cpuset = ?, mem = ? where id = ?', (cpuset, container.mem, container.id))
-    cur.execute('delete from scale_hook where container_id = ?', (container.id,))
-    for hook in container.scale_hooks:
-      cur.execute('insert into scale_hook (container_id, hook) values (?, ?)',
-        (container.id, hook))
     con.commit()
   finally:
     con.close()
@@ -77,6 +69,9 @@ def insert_tier(tier):
     tier.id = cur.lastrowid
     for hook in tier.tier_hooks:
       cur.execute('insert into tier_hook (tier_id, hook) values(?, ?)',
+        (tier.id, hook))
+    for hook in tier.scale_hooks:
+      cur.execute('insert into scale_hook (tier_id, hook) values(?, ?)',
         (tier.id, hook))
     for dependency in tier.depends_on:
       cur.execute('insert into dependency (from_tier_id, to_tier_name) values (?, ?)',
@@ -93,6 +88,7 @@ def delete_tiers():
     cur = con.cursor()
     cur.execute('delete from tier')
     cur.execute('delete from tier_hook')
+    cur.execute('delete from scale_hook')
     cur.execute('delete from dependency')
     con.commit()
     return

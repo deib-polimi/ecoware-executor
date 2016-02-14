@@ -63,17 +63,22 @@ def update_container(container, cpuset, mem_mb):
   cmd = 'docker run -it n43jl/docker-update docker -H {}:{} update --cpuset-cpus={} -m={}m {}'.format(host, port, cpuset_string, mem_mb, container.name)
   subprocess.check_call(cmd.split())
   logging.info(cmd)
-  for hook in container.scale_hooks:
-    cmd = 'docker -H {}:{} exec {} sh -c "cd /vagrant/scale_hooks && ./{}"'.format(host, port, container.name, hook)
-    subprocess.check_output(cmd, shell=True)
-    logging.info(cmd)
-  
+
 def run_tier_hooks(container, hooks):
   vm = container.vm
   host = vm.host
   port = vm.docker_port
   for hook in hooks:
     cmd = 'docker -H {}:{} exec {} sh -c "cd /vagrant/tier_hooks && ./{}"'.format(host, port, container.name, hook)
+    subprocess.check_output(cmd, shell=True)
+    logging.info(cmd)
+
+def run_scale_hooks(container, hooks):
+  vm = container.vm
+  host = vm.host
+  port = vm.docker_port
+  for hook in hooks:
+    cmd = 'docker -H {}:{} exec {} sh -c "cd /vagrant/scale_hooks && ./{}"'.format(host, port, container.name, hook)
     subprocess.check_output(cmd, shell=True)
     logging.info(cmd)
 

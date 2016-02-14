@@ -5,14 +5,13 @@ import docker
 
 class Container:
 
-  def __init__(self, id, vm, name, cpuset, mem_units, scale_hooks):
+  def __init__(self, id, vm, name, cpuset, mem_units):
     self.id = id
     self.vm = vm
     self.name = name
     self.cpuset = cpuset
     self.mem_units = int(mem_units)
     self.mem = self.get_mem()
-    self.scale_hooks = scale_hooks if scale_hooks else []
 
   def run(self):
     docker.run_container(self)
@@ -32,15 +31,17 @@ class Container:
   def get_mem_mb(self):
     return vm.Vm.MEM_UNIT * self.mem_units
 
-  def update(self, cpuset, mem_units, scale_hooks):
+  def update(self, cpuset, mem_units):
     docker.update_container(self, cpuset, vm.Vm.MEM_UNIT * mem_units)
     self.cpuset = cpuset
     self.mem_units = mem_units
     self.mem = self.get_mem()
-    self.scale_hooks = scale_hooks if scale_hooks else []
 
   def run_tier_hooks(self, hooks):
     docker.run_tier_hooks(self, hooks)
+
+  def run_scale_hooks(self, hooks):
+    docker.run_scale_hooks(self, hooks)
 
   def dict(self):
     return {

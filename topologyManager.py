@@ -12,9 +12,9 @@ from container import Container
 from tier import Tier
 
 
-_topology = {} # id->vm
-_tiers = {}
-_ports = {}
+_topology = {} # id -> Vm
+_tiers = {} # name -> Tier
+_ports = {} # port -> Vm
 
 def init():
   global _topology, _ports, _tiers
@@ -26,21 +26,21 @@ def init():
       for subrow in conn.execute('select * from tier_hook where tier_id = ?', (row[0],)):
         tier_hooks.append(subrow[2])
 
+      scale_hooks = []
+      for subrow in conn.execute('select * from scale_hook where tier_id = ?', (row[0],)):
+        scale_hooks.append(subrow[2])
+
       depends_on = []
       for subrow in conn.execute('select * from dependency where from_tier_id = ?', (row[0],)):
         depends_on.append(subrow[2])
       
-      new_tier = Tier(row[0], row[1], row[2], depends_on, tier_hooks)
+      new_tier = Tier(row[0], row[1], row[2], depends_on, tier_hooks, scale_hooks)
       _tiers[row[1]] = new_tier
     for row in conn.execute('select * from vm'):
       new_vm = vm.Vm(row[0], row[1], row[2], row[3], row[4], row[5])
       for subrow in conn.execute('select * from container where vm_id = ?', (new_vm.id,)):
-        scale_hooks = []
-        for hook_row in conn.execute('select * from scale_hook where container_id = ?', (subrow[0],)):
-          scale_hooks.append(hook_row[2])
-
         cpuset = map(int, subrow[3].split(','))
-        docker = Container(subrow[0], new_vm, subrow[2], cpuset, subrow[4], scale_hooks)
+        docker = Container(subrow[0], new_vm, subrow[2], cpuset, subrow[4])
         new_vm.containers.append(docker)
         logging.debug('container loaded={} for vm={}'.format(docker, new_vm.id))
       _topology[new_vm.id] = new_vm
@@ -96,11 +96,13 @@ def start_vm(id):
   vm2start = _topology[id]
   vm2start.start()
 
-def run_container(vm_id, name, cpuset, mem_units, scale_hooks):
+def run_container(vm_id, name, cpuset, mem_units):
   container_vm = _topology[vm_id]
   id = None
-  new_container = Container(id, container_vm, name, cpuset, mem_units, scale_hooks)
+  new_container = Container(id, container_vm, name, cpuset, mem_units)
   new_container.run()
+  tier = _tiers[name]
+  new_container.run_scale_hooks(tier.scale_hooks)
   id = db.insert_container(new_container)
   new_container.id = id
   container_vm.containers.append(new_container)
@@ -135,13 +137,15 @@ def delete_container(id):
       return
   raise Exception('Container id={} not found'.format(id))
 
-def update_container(id, cpuset, mem_units, scale_hooks):
+def update_container(id, cpuset, mem_units):
   for vm in _topology.values():
     for container in vm.containers:
       if container.id == id:
         if not vm.host  in ['localhost', '127.0.0.1']:
           raise Exception('Container update can not be run on remote host')
-        container.update(cpuset, mem_units, scale_hooks)
+        container.update(cpuset, mem_units)
+        tier = _tiers[container.name]
+        container.run_scale_hooks(tier.scale_hooks)
         db.update_container(container)
         return container
   raise Exception('Container id={} not found'.format(id))
@@ -160,9 +164,6 @@ def get_allocation():
       containers[container.name] = collections.OrderedDict()
       containers[container.name]['cpuset'] = ','.join(map(str, container.cpuset))
       containers[container.name]['mem_units'] = container.mem_units
-      containers[container.name]['scale_hooks'] = []
-      for scale_hook in container.scale_hooks:
-        containers[container.name]['scale_hooks'].append(scale_hook)
   return new_topology
 
 def get_topology():
@@ -181,6 +182,8 @@ def get_topology():
       tier['depends_on'] = ex_tier.depends_on
     if ex_tier.tier_hooks:
       tier['tier_hooks'] = ex_tier.tier_hooks
+    if ex_tier.scale_hooks:
+      tier['scale_hooks'] = ex_tier.scale_hooks
   return result
 
 def _map_topology_by_name():
@@ -224,8 +227,9 @@ def _parse_tiers(tiers):
       image = tiers[name]['image']
       depends_on = tiers[name].get('depends_on')
       tier_hooks = tiers[name].get('tier_hooks')
+      scale_hooks = tiers[name].get('scale_hooks')
       id = None
-      new_tier = Tier(id, name, image, depends_on, tier_hooks)
+      new_tier = Tier(id, name, image, depends_on, tier_hooks, scale_hooks)
       db.insert_tier(new_tier)
       _tiers[name] = new_tier
 
@@ -256,17 +260,16 @@ def _execute_plan(plan):
         plan_container = plan_vm['containers'][container_name]
         cpuset = map(int, plan_container['cpuset'].split(','))
         mem_units = plan_container['mem_units']
-        scale_hooks = plan_container.get('scale_hooks')
         
         if not container_name in containers:
           # create container
-          run_container(vm_obj.id, container_name, cpuset, mem_units, scale_hooks)
+          run_container(vm_obj.id, container_name, cpuset, mem_units)
           changed.add(container_name)
         else:
           # update container
           container_obj = containers[container_name]
           if cpuset != container_obj.cpuset or mem_units != container_obj.mem_units:
-            update_container(container_obj.id, cpuset, mem_units, scale_hooks)
+            update_container(container_obj.id, cpuset, mem_units)
             changed.add(container_obj.name)
   for vm in _topology.values():
     if not vm.name in plan:
