@@ -76,6 +76,11 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     elif args[-1] == 'topology':
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
       post_data = json.loads(post_data_string)
+      topologyManager.set_topology(post_data)
+      response = {}
+    elif args[-1] == 'plan':
+      post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+      post_data = json.loads(post_data_string)
       topologyManager.execute(post_data)
       response = {}
     else:

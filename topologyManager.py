@@ -147,9 +147,7 @@ def update_container(id, cpuset, mem_units, scale_hooks):
   raise Exception('Container id={} not found'.format(id))
 
 def get_allocation():
-  result = {}
   new_topology = {}
-  result['plan'] = new_topology
   for vm in _topology.values():
     new_topology[vm.name] = collections.OrderedDict()
     new_topology[vm.name]['host'] = vm.host
@@ -165,7 +163,7 @@ def get_allocation():
       containers[container.name]['scale_hooks'] = []
       for scale_hook in container.scale_hooks:
         containers[container.name]['scale_hooks'].append(scale_hook)
-  return result
+  return new_topology
 
 def get_topology():
   result = {}
@@ -197,11 +195,12 @@ def _map_containers_by_name(containers):
     new_map[container.name] = container
   return new_map
 
-def execute(data):
-  tiers = data.get('tiers')
+def set_topology(data):
+  tiers = data['app']['tiers']
   _parse_tiers(tiers)
-  plan = data['plan']
-  changed_containers = _execute_plan(plan)
+
+def execute(data):
+  changed_containers = _execute_plan(data)
   _process_tier_hooks(changed_containers)
 
 def _process_tier_hooks(changed):
