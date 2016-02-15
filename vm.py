@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import json
+import requests
 
 import topologyManager
 import vagrant
@@ -26,7 +27,18 @@ class Vm:
     return Vm.MEM_UNIT * self.mem_units
 
   def start(self):
-    vagrant.create_vm(self)
+    if self.host == 'localhost':
+      vagrant.create_vm(self)
+    else:
+      data = {
+        'name': self.name,
+        'cpu_cores': self.cpu_cores,
+        'mem_units': self.mem_units,
+        'host': 'localhost',
+        'docker_port': -1
+      }
+      r = requests.post('http://{}:8000'.format(self.host), data=json.dumps(data))
+      print r.text
 
   def delete(self):
     vagrant.delete_vm(self)

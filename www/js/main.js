@@ -44,8 +44,6 @@
           toastr.error('Error processing topology description');
         }
       });
-
-
     });
   });
 

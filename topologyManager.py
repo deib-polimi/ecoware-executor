@@ -14,7 +14,7 @@ from tier import Tier
 
 _topology = {} # id -> Vm
 _tiers = {} # name -> Tier
-_ports = {} # port -> Vm
+_ports = {} # host -> { port -> vm }
 
 def init():
   global _topology, _ports, _tiers
@@ -44,8 +44,9 @@ def init():
         new_vm.containers.append(docker)
         logging.debug('container loaded={} for vm={}'.format(docker, new_vm.id))
       _topology[new_vm.id] = new_vm
-      if new_vm.host in ['localhost', '127.0.0.1']:
-        _ports[new_vm.docker_port] = new_vm
+      if not new_vm.host in _ports:
+        _ports[new_vm.host] = {}
+      _ports[new_vm.host][new_vm.docker_port] = new_vm
       logging.debug('vm loaded={}'.format(new_vm))
     logging.debug('topology loaded={}'.format(_topology))
   finally:
@@ -55,25 +56,25 @@ def get_vms():
   global _topology
   return _topology.values()
 
-def get_next_docker_port():
+def get_next_docker_port(host):
   global _ports
   port = 5000
-  while port in _ports:
-    port += 1
+  if host in _ports:
+    while port in _ports[host]:
+      port += 1
   return port 
 
-def create_vm(name, cpu_cores, mem_units, host, port):
+def create_vm(name, cpu_cores, mem_units, host):
   global _topology, _ports
-  if not port or port == -1:
-    port = get_next_docker_port()
-  if not host:
+  if not host or host == '127.0.0.1':
     host = 'localhost'
+  port = get_next_docker_port(host)
   id = None
   new_vm = vm.Vm(id, name, cpu_cores, mem_units, host, port)
-  if host in ('localhost', '127.0.0.1'):
-    host = 'localhost'
-    new_vm.start()
-    _ports[new_vm.docker_port] = new_vm
+  new_vm.start()
+  if not host in _ports:
+    _ports[host] = {}
+  _ports[host][new_vm.docker_port] = new_vm
   id = db.insert_vm(new_vm)
   new_vm.id = id
   _topology[new_vm.id] = new_vm
@@ -82,9 +83,9 @@ def create_vm(name, cpu_cores, mem_units, host, port):
 def delete_vm(id):
   global _topology, _ports
   vm2remove = _topology[id]
-  if vm2remove.host in ['localhost', '127.0.0.1']:
-    vm2remove.delete()
-    del _ports[vm2remove.docker_port]
+  if vm2remove.host in _ports and vm2remove.docker_port in _ports[vm2remove.host]:
+    del _ports[vm2remove.host][vm2remove.docker_port]
+  vm2remove.delete()
   db.delete_vm(id)
   del _topology[id]
 
@@ -244,7 +245,7 @@ def _execute_plan(plan):
     plan_containers = plan_vm.get('containers')
     if not vm_name in topology_by_name:
       # create vm
-      vm_obj = create_vm(vm_name, plan_vm['cpu_cores'], plan_vm['mem_units'], plan_vm.get('host'), plan_vm.get('docker_port'))
+      vm_obj = create_vm(vm_name, plan_vm['cpu_cores'], plan_vm['mem_units'], plan_vm.get('host'))
     else:
       vm_obj = topology_by_name[vm_name]
       containers = _map_containers_by_name(vm_obj.containers)

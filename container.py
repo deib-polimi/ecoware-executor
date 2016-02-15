@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+import json
+import requests
+
 import vm
 import docker
 

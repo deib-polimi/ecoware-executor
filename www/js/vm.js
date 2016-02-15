@@ -48,14 +48,12 @@
   var onVmCreate = function() {
     var $btn = $(this);
     $btn.button('loading');
-    var port = parseInt($('#vm-docker-port-input').val()) || -1;
     var host = $('#vm-host-input').val() || 'localhost';
     var data = {
       name: $('#vm-name-input').val(),
       cpu_cores: parseInt($('#vm-cpu-input').val()),
       mem_units: parseInt($('#vm-mem-input').val()),
-      host: host,
-      docker_port: port
+      host: host
     };
     $.ajax({
       url: '/api/vm', 
@@ -86,10 +84,8 @@
     $('<td>').text(dockerAddr).appendTo($row);
     var $btnGroup = $('<div>').addClass('btn-group');
     $('<button>').addClass('btn btn-default').text('Delete').click(onVmDelete).appendTo($btnGroup);
-    if (['127.0.0.1', 'localhost'].indexOf(vm.host) != -1) {
-      $('<button>').addClass('btn btn-default').text('Stop').click(onVmStop).appendTo($btnGroup);
-      $('<button>').addClass('btn btn-default').text('Start').click(onVmStart).appendTo($btnGroup);      
-    }
+    $('<button>').addClass('btn btn-default').text('Stop').click(onVmStop).appendTo($btnGroup);
+    $('<button>').addClass('btn btn-default').text('Start').click(onVmStart).appendTo($btnGroup);      
     $('<td>').append($btnGroup).appendTo($row);
     $row.appendTo($('#vms'));
     $row.data('vm', vm);
