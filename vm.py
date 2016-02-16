@@ -33,9 +33,7 @@ class Vm:
       data = {
         'name': self.name,
         'cpu_cores': self.cpu_cores,
-        'mem_units': self.mem_units,
-        'host': 'localhost',
-        'docker_port': -1
+        'mem_units': self.mem_units
       }
       r = requests.post('http://{}:8000'.format(self.host), data=json.dumps(data))
       print r.text
