@@ -4,6 +4,6 @@ Vagrant.configure("2") do |config|
     v.cpus = 2
   end
   config.vm.box = "docker-update"
-  config.vm.network "forwarded_port", guest: 2376, host: 5000
+  config.vm.network "forwarded_port", guest: 8000, host: 8000
 end
 
