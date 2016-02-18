@@ -1,0 +1,2 @@
+#!/bin/sh
+env AWS_SECRET_ACCESS_KEY=$1 AWS_ACCESS_KEY_ID=AKIAIQ65Q37XZO2THUBQ nohup ./httpHandler.py &
