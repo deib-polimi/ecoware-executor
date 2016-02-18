@@ -6,10 +6,13 @@ import SimpleHTTPServer
 import SocketServer
 import json
 import time
+import sys
+import traceback
 from sys import argv
 
 import topologyManager
 from vm import Vm
+import simple_executor
 
 class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def do_GET(self):
@@ -48,7 +51,20 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def do_POST(self):
     start = time.time()
     args = self.path.split('/')
-    if args[-1] == 'stop':
+    if args[-1] == 'executor':
+      try:
+        post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+        post_data = json.loads(post_data_string)
+        actions = simple_executor.execute(post_data)
+        response = {}        
+        response['actions'] = actions
+        print actions
+      except Exception as e: 
+        response = {}
+        response['error'] = repr(e)
+        traceback.print_exc(file=sys.stdout)
+
+    elif args[-1] == 'stop':
       if args[-3] == 'container':
         container_id = int(args[-2])
         topologyManager.stop_container(container_id)
@@ -96,6 +112,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
     self.end_headers()
+    print response
     self.wfile.write(json.dumps(response))
 
   def do_DELETE(self):
