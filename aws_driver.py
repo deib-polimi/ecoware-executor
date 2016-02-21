@@ -7,8 +7,8 @@ import requests # pip install requests
 from xml.etree import ElementTree
 from collections import OrderedDict
 
-def cli_set_desired_capacity(capacity):
-  cmd = 'aws --region us-west-2 autoscaling update-auto-scaling-group --auto-scaling-group-name ex3 --desired-capacity {0} --max {0}'.format(capacity)
+def cli_set_desired_capacity(group_name, capacity):
+  cmd = 'aws --region us-west-2 autoscaling update-auto-scaling-group --auto-scaling-group-name {} --desired-capacity {0} --max {0}'.format(group_name, capacity)
   try:
     subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
     return cmd
@@ -16,12 +16,12 @@ def cli_set_desired_capacity(capacity):
     print ex.output
     raise Exception(ex.output)
 
-def set_desired_capacity(capacity):
+def set_desired_capacity(group_name, capacity):
   method = 'GET'
   endpoint = 'https://autoscaling.us-west-2.amazonaws.com'
   parameters = {
     'Action': 'UpdateAutoScalingGroup',
-    'AutoScalingGroupName': 'ex3',
+    'AutoScalingGroupName': group_name,
     'DesiredCapacity': capacity,
     'HonorCooldown': False,
     'MaxSize': capacity,
@@ -46,9 +46,6 @@ def get_auto_scale_groups():
     raise Exception(r.text)  
   root = ElementTree.fromstring(r.text)
   ns = namespace(root)
-  print root, root.tag, namespace(root)
-  for child in root:
-    print child.tag
   groups = root.find('.//*{}AutoScalingGroups'.format(ns))
   groups_dict = {}
   for member in groups:

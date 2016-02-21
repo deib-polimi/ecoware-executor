@@ -8,7 +8,16 @@
       data: JSON.stringify(data),
       success: function(resp) {
         $btn.button('reset');
-        toastr.success('Plan is processed successfully in {0}s'.format(resp.time));
+        if (resp.error) {
+          toastr.error('Error processing this plan: ' + resp.error);
+        } else {
+          console.log(resp)
+          var json = JSON.stringify(resp, null, '\t');
+          console.log(json)
+          $('#plan-area').val(json);
+          toastr.success('Plan is processed successfully in {0}s'.format(resp.time));
+        }
+        
       },
       error: function() {
         $btn.button('reset');
@@ -21,12 +30,12 @@
     'use strict';
     $.get('/api/simple/topology', function(resp) {
       var json = JSON.stringify(resp, null, '\t');
-      $('#tier-area').text(json);
+      $('#tier-area').val(json);
     });
 
     $.get('/api/simple/allocation', function(resp) {
       var json = JSON.stringify(resp, null, '\t');
-      $('#plan-area').text(json);
+      $('#plan-area').val(json);
     });
 
     $('#process-plan-btn').click(function() {

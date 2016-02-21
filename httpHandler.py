@@ -46,6 +46,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         response = {}
         response['error'] = repr(e)
         traceback.print_exc(file=sys.stdout)
+      response['time'] = '{0:.2f}'.format(time.time() - start)
       self.send_response(200)
       self.send_header('Content-type', 'application/json')
       self.end_headers()
@@ -73,14 +74,14 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def do_POST(self):
     start = time.time()
     args = self.path.split('/')
-    if args[-1] == 'executor':
+    if self.path.startswith('/api/simple/executor'):
       try:
         post_data_string = self.rfile.read(int(self.headers['Content-Length']))
         post_data = json.loads(post_data_string)
-        actions = simple_executor.execute(post_data)
-        response = {}        
-        response['actions'] = actions
-        print actions
+        post_data.pop("time", None)
+        simple_topology.execute(post_data)
+        new_allocation = simple_topology.get_allocation()
+        response = new_allocation      
       except Exception as e: 
         response = {}
         response['error'] = repr(e)
