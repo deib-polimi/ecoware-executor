@@ -2,7 +2,7 @@
 
   function sendPlan($btn) {
     var data = JSON.parse($('#plan-area').val());
-    $.ajax('/api/plan', {
+    $.ajax('/api/simple/executor', {
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(data),
@@ -19,12 +19,12 @@
 
   $(document).ready(function () {
     'use strict';
-    $.get('/api/topology', function(resp) {
+    $.get('/api/simple/topology', function(resp) {
       var json = JSON.stringify(resp, null, '\t');
       $('#tier-area').text(json);
     });
 
-    $.get('/api/allocation', function(resp) {
+    $.get('/api/simple/allocation', function(resp) {
       var json = JSON.stringify(resp, null, '\t');
       $('#plan-area').text(json);
     });
@@ -32,7 +32,7 @@
     $('#process-plan-btn').click(function() {
       var $btn = $(this).button('loading');
       var data = JSON.parse($('#tier-area').val());
-      $.ajax('/api/topology', {
+      $.ajax('/api/simple/topology', {
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),

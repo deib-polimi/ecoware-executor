@@ -11,11 +11,13 @@ import traceback
 from sys import argv
 
 import topologyManager
-from vm import Vm
 import simple_executor
+import simple_topology
+from vm import Vm
 
 class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
   def do_GET(self):
+    start = time.time()
     if self.path == '/':
       self.path = '/www/index.html'
     elif self.path.startswith('/docker'):
@@ -37,8 +39,28 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       self.end_headers()
       self.wfile.write(json.dumps(topology))
       return
+    elif self.path.startswith('/api/simple/allocation'):
+      try:
+        response = simple_topology.get_allocation()
+      except Exception as e: 
+        response = {}
+        response['error'] = repr(e)
+        traceback.print_exc(file=sys.stdout)
+      self.send_response(200)
+      self.send_header('Content-type', 'application/json')
+      self.end_headers()
+      self.wfile.write(json.dumps(response))
+      print 'response time {0:.2f}'.format(time.time() - start)
+      return
     elif self.path.startswith('/api/allocation'):
       topology = topologyManager.get_allocation()
+      self.send_response(200)
+      self.send_header('Content-type', 'application/json')
+      self.end_headers()
+      self.wfile.write(json.dumps(topology))
+      return
+    elif self.path.startswith('/api/simple/topology'):
+      topology = simple_topology.get_topology()
       self.send_response(200)
       self.send_header('Content-type', 'application/json')
       self.end_headers()
@@ -89,8 +111,12 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       response['mem'] = container.mem
       response['id'] = container.id
       response['vm'] = container.vm.dict_flat()
-    elif args[-1] == 'topology':
+    elif self.path.startswith('/api/simple/topology'):
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+      post_data = json.loads(post_data_string)
+      simple_topology.set_topology(post_data)
+      response = {}
+    elif args[-1] == 'topology':
       post_data = json.loads(post_data_string)
       topologyManager.set_topology(post_data)
       response = {}

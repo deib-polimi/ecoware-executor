@@ -2,7 +2,9 @@
 import subprocess
 import sys, os, base64, datetime, hashlib, hmac 
 import urllib
+import re
 import requests # pip install requests
+from xml.etree import ElementTree
 from collections import OrderedDict
 
 def cli_set_desired_capacity(capacity):
@@ -31,6 +33,29 @@ def set_desired_capacity(capacity):
     raise Exception(r.text)  
   return r.text
 
+def get_auto_scale_groups():
+  method = 'GET'
+  endpoint = 'https://autoscaling.us-west-2.amazonaws.com'
+  parameters = {
+    'Action': 'DescribeAutoScalingGroups',
+    'Version': '2011-01-01'
+  }
+  request_url, headers = build_canonical_request(method, endpoint, parameters)
+  r = requests.get(request_url, headers=headers)
+  if r.status_code is not 200:
+    raise Exception(r.text)  
+  root = ElementTree.fromstring(r.text)
+  ns = namespace(root)
+  print root, root.tag, namespace(root)
+  for child in root:
+    print child.tag
+  groups = root.find('.//*{}AutoScalingGroups'.format(ns))
+  groups_dict = {}
+  for member in groups:
+    name = member.find(ns + 'AutoScalingGroupName').text
+    desired_capacity = int(member.find(ns + 'DesiredCapacity').text)
+    groups_dict[name] = desired_capacity
+  return groups_dict
 
 # http://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html
 # Key derivation functions. See:
@@ -88,3 +113,12 @@ def build_canonical_request(method, endpoint, parameters):
   headers = {'x-amz-date':amzdate, 'Authorization':authorization_header}
   request_url = endpoint + '?' + canonical_querystring
   return (request_url, headers)
+
+def namespace(element):
+  m = re.match('\{.*\}', element.tag)
+  return m.group(0) if m else ''
+
+if __name__ == '__main__':
+  os.environ["AWS_ACCESS_KEY_ID"] = "AKIAIOLT23JQ7DHIXATQ"
+  os.environ["AWS_SECRET_ACCESS_KEY"] = ""
+  print get_auto_scale_groups()
