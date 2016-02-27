@@ -42,9 +42,11 @@ def start_virtual_machines(group_name, capacity):
       is_ready = True
       for instance in my_group['Instances']:
         if instance['LifecycleState'] != 'InService':
+          logging.debug('Instances are not initialized yet; sleep 10s')
           is_ready = False
+          time.sleep(10)
     else:
-      print 'sleep 10s'
+      logging.info('Instances are not created; sleep 10s')
       time.sleep(10)
   instance_ids = []
   for instance in my_group['Instances']:
@@ -71,6 +73,24 @@ def get_ip_addresses(instance_ids):
       instances.append((instance_id, public_ip))
   return instances
 
+def detach_instances(instance_ids):
+  client = boto3.client('autoscaling')
+  response = client.detach_instances(
+    InstanceIds=instance_ids,
+    AutoScalingGroupName=group_name,
+    ShouldDecrementDesiredCapacity=True
+  )
+
+def terminate_instances(instance_ids):
+  ec2 = boto3.client('ec2')
+  response = ec2.terminate_instances(
+    InstanceIds=instance_ids
+  )
+
+def remove_vm(instance_id):
+  instance_ids = [instance_id]
+  detach_instances(instance_ids)
+  terminate_instances(instance_ids)
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
