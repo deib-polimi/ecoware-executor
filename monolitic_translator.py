@@ -191,9 +191,9 @@ class MonoliticTranslator:
       vm_add_count = int(ceil(max(1.0 *(demand_cpu - resources_cpu) / vm_cpu_cores, 1.0 * (demand_mem - resources_mem) / vm_mem_units)))
       for i in range(0, vm_add_count):
         j = len(allocation)
-        while 'vm{}'.format(j) in allocation:
+        while 'new_vm{}'.format(j) in allocation:
           j += 1
-        allocation['vm{}'.format(j)] = {
+        allocation['new_vm{}'.format(j)] = {
           'cpu_cores': vm_cpu_cores,
           'mem_units': vm_mem_units
         }
