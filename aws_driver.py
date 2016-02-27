@@ -25,14 +25,6 @@ def get_auto_scale_groups():
     groups[group['AutoScalingGroupName']] = group['DesiredCapacity']
   return groups
 
-def json_serial(obj):
-  """JSON serializer for objects not serializable by default json code"""
-
-  if isinstance(obj, datetime):
-      serial = obj.isoformat()
-      return serial
-  raise TypeError ("Type not serializable")
-
 if __name__ == '__main__':
   os.environ["AWS_ACCESS_KEY_ID"] = ""
   os.environ["AWS_SECRET_ACCESS_KEY"] = ""
