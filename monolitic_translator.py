@@ -60,7 +60,7 @@ class MonoliticTranslator:
         for tier in allocation[vm]:
           if tier in topology[vm]['used']:
             if (topology[vm]['used'][tier]['cpu_cores'] == allocation[vm][tier]['cpu_cores']
-                  and topology[vm]['used'][tier]['mem'] == allocation[vm][tier]['mem']):
+                  and topology[vm]['used'][tier]['mem_units'] == allocation[vm][tier]['mem_units']):
                 pass
             else:
               points += WEIGHT['container_set']
@@ -160,19 +160,19 @@ class MonoliticTranslator:
           if not app in demand:
             demand[app] = {}
             demand[app]['cpu_cores'] = 0
-            demand[app]['mem'] = 0
+            demand[app]['mem_units'] = 0
           demand[app]['cpu_cores'] += topology[vm]['used'][app]['cpu_cores']
-          demand[app]['mem'] += topology[vm]['used'][app]['mem']
+          demand[app]['mem_units'] += topology[vm]['used'][app]['mem_units']
     for app in plan_json:
       if (not app in demand or 
           plan_json[app]['cpu_cores'] != demand[app]['cpu_cores'] or
-          plan_json[app]['mem'] != demand[app]['mem']):
+          plan_json[app]['mem_units'] != demand[app]['mem_units']):
         return True
     for app in demand:
       if not app in plan_json:
         plan_json[app] = {}
         plan_json[app]['cpu_cores'] = 0
-        plan_json[app]['mem'] = 0
+        plan_json[app]['mem_units'] = 0
         return True
     return False
 
@@ -190,10 +190,7 @@ class MonoliticTranslator:
     if demand_cpu > resources_cpu or demand_mem > resources_mem:
       vm_add_count = int(ceil(max(1.0 *(demand_cpu - resources_cpu) / vm_cpu_cores, 1.0 * (demand_mem - resources_mem) / vm_mem_units)))
       for i in range(0, vm_add_count):
-        j = len(allocation)
-        while 'new_vm{}'.format(j) in allocation:
-          j += 1
-        allocation['new_vm{}'.format(j)] = {
+        allocation['new_vm{}'.format(i)] = {
           'cpu_cores': vm_cpu_cores,
           'mem_units': vm_mem_units
         }
@@ -248,6 +245,8 @@ def read_plan(filename):
     plan = json.loads(read_data)
   f.closed
   return plan
+
+
 
 def main():
   logging.basicConfig(level=logging.DEBUG)

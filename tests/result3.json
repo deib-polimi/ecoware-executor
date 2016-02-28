@@ -1,0 +1,3 @@
+[
+  "set 'jboss' container in 'vm2' virtual machine cpu_cores=2 and mem=1.0gb"
+]

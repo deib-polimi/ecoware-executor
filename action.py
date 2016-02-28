@@ -17,7 +17,7 @@ class Action:
     self.container = container
     self.cpu = cpu
     self.mem_units = mem_units
-    self.mem = mem_units / 2.
+    self.mem = mem_units / 2. if mem_units else None
 
   def __str__(self):
     if self.type == ActionType.vm_create:
