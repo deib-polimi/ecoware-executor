@@ -12,11 +12,14 @@ _topology = {
     'vm_cpu_cores': 2,
     'vm_mem_units': 8,
     'tiers': {
-      'jboss': {
-        'image': 'httpd'
+      'pwitter-web': {
+        'image': 'pwitter-web',
+        'docker_params': '-p 8080:5000 --add-host="db:172.31.31.123"',
       },
-      'db': {
-        'image': 'nginx'
+      'rubis-jboss': {
+        'image': 'polimi/rubis-jboss:nosensors',
+        'docker_params': '-p 80:8080 --add-host="db:172.31.18.15"',
+        'entrypoint_params': '/opt/jboss-4.2.2.GA/bin/run.sh --host=0.0.0.0 --bootdir=/opt/rubis/rubis-cvs-2008-02-25/Servlets_Hibernate -c default'
       }
     }
   }

@@ -129,8 +129,8 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         container_name = post_data['name']
         cpuset = post_data['cpuset']
         mem_units = post_data['mem_units']
-        image = monolitic_topology.get_topology()['app']['tiers'][container_name]['image']
-        docker.run_container(container_name, image, cpuset, mem_units)
+        info = monolitic_topology.get_topology()['app']['tiers'][container_name]
+        docker.run_container(container_name, cpuset, mem_units, info)
         response = {}
       except Exception as e: 
         response = {}

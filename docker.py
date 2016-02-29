@@ -5,11 +5,14 @@ import logging
 
 import topologyManager
 
-def run_container(name, image, cpuset_arr, mem_units):
+def run_container(name, cpuset_arr, mem_units, info):
   logging.debug('run container')
   cpuset = ','.join(map(str, cpuset_arr))
   mem_mb = mem_units * 512
-  cmd = 'docker run -it -d --cpuset-cpus={} -m={}m --name={} -v=/vagrant:/vagrant {}'.format(cpuset, mem_mb, name, image)
+  image = info['image']
+  docker_params = info.get('docker_params', '')
+  entrypoint_params = info.get('entrypoint_params', '')
+  cmd = 'docker run -it -d {} --cpuset-cpus={} -m={}m --name={} -v=/vagrant:/vagrant {} {}'.format(docker_params, cpuset, mem_mb, name, image, entrypoint_params)
   try:
     subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
     logging.info(cmd)
