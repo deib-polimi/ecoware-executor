@@ -14,6 +14,7 @@ import topologyManager
 import simple_executor
 import simple_topology
 import monolitic_topology
+import docker
 from vm import Vm
 
 class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -110,15 +111,30 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         response = {}
         response['error'] = repr(e)
         traceback.print_exc(file=sys.stdout)
-
-    elif args[-1] == 'stop':
-      if args[-3] == 'container':
-        container_id = int(args[-2])
-        topologyManager.stop_container(container_id)
-      else:
-        id = int(args[-2])
-        topologyManager.stop_vm(id)
-      response = {}
+    elif self.path.startswith('/api/monolitic/docker/stop'):
+      try:
+        post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+        post_data = json.loads(post_data_string)
+        container_name = post_data['container_name']
+        # TODO: stop container
+      except Exception as e: 
+        response = {}
+        response['error'] = repr(e)
+        traceback.print_exc(file=sys.stdout)
+    elif self.path.startswith('/api/monolitic/docker/run'):
+      try:
+        post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+        post_data = json.loads(post_data_string)
+        container_name = post_data['name']
+        cpuset = post_data['cpuset']
+        mem_units = post_data['mem_units']
+        image = monolitic_topology.get_topology()['app']['tiers'][container_name]['image']
+        docker.run_container(container_name, image, cpuset, mem_units)
+        response = {}
+      except Exception as e: 
+        response = {}
+        response['error'] = repr(e)
+        traceback.print_exc(file=sys.stdout)
     elif args[-1] == 'start':
       if args[-3] == 'container':
         container_id = int(args[-2])

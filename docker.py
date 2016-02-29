@@ -11,18 +11,18 @@ def _get_host_ip():
   host = output.strip().split('/')[0]
   return host
 
-def run_container(docker_container):
+def run_container(name, image, cpuset_arr, mem_units):
   logging.debug('run container')
-  vm = docker_container.vm
-  host = vm.host
-  port = vm.docker_port
-  name = docker_container.name
-  image = topologyManager.get_tier_image(name)
-  cpuset = ','.join(map(str, docker_container.cpuset))
-  mem = docker_container.get_mem_mb()
-  cmd = 'docker -H {}:{} run -it -d --cpuset-cpus={} -m={}m --name={} -v=/vagrant:/vagrant {}'.format(host, port, cpuset, mem, name, image)
-  subprocess.check_call(cmd.split())
-  logging.info('docker -H {}:{} run -it -d --cpuset-cpus={} -m={}m --name={} {}'.format(host, port, cpuset, mem, name, image))
+  cpuset = ','.join(map(str, cpuset_arr))
+  mem_mb = mem_units * 512
+  cmd = 'docker run -it -d --cpuset-cpus={} -m={}m --name={} -v=/vagrant:/vagrant {}'.format(cpuset, mem_mb, name, image)
+  try:
+    subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+    logging.info(cmd)
+    return cmd
+  except subprocess.CalledProcessError, ex: # error code <> 0 
+    print ex.output
+    raise Exception(ex.output)
 
 def stop_container(docker_container):
   vm = docker_container.vm
