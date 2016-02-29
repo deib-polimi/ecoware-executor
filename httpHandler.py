@@ -111,17 +111,18 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         response = {}
         response['error'] = repr(e)
         traceback.print_exc(file=sys.stdout)
-    elif self.path.startswith('/api/monolitic/docker/stop'):
+    elif self.path.startswith('/api/docker/stop'):
       try:
         post_data_string = self.rfile.read(int(self.headers['Content-Length']))
         post_data = json.loads(post_data_string)
-        container_name = post_data['container_name']
-        # TODO: stop container
+        container_name = post_data['name']
+        docker.stop_container(container_name)
+        response = {}
       except Exception as e: 
         response = {}
         response['error'] = repr(e)
         traceback.print_exc(file=sys.stdout)
-    elif self.path.startswith('/api/monolitic/docker/run'):
+    elif self.path.startswith('/api/docker/run'):
       try:
         post_data_string = self.rfile.read(int(self.headers['Content-Length']))
         post_data = json.loads(post_data_string)
@@ -135,23 +136,17 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         response = {}
         response['error'] = repr(e)
         traceback.print_exc(file=sys.stdout)
-    elif args[-1] == 'start':
-      if args[-3] == 'container':
-        container_id = int(args[-2])
-        topologyManager.start_container(container_id)
-      else:
-        id = int(args[-2])
-        topologyManager.start_vm(id)
-      response = {}
-    elif args[-1] == 'container':
-      post_data_string = self.rfile.read(int(self.headers['Content-Length']))
-      post_data = json.loads(post_data_string)
-      vm_id = int(args[-2])
-      container = topologyManager.run_container(vm_id, post_data['name'], post_data['cpuset'], post_data['mem_units'])
-      response = post_data
-      response['mem'] = container.mem
-      response['id'] = container.id
-      response['vm'] = container.vm.dict_flat()
+    elif self.path.startswith('/api/docker/start'):
+      try:
+        post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+        post_data = json.loads(post_data_string)
+        container_name = post_data['name']
+        docker.start_container(container_name)
+        response = {}
+      except Exception as e: 
+        response = {}
+        response['error'] = repr(e)
+        traceback.print_exc(file=sys.stdout)
     elif self.path.startswith('/api/simple/topology'):
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
       post_data = json.loads(post_data_string)
@@ -189,43 +184,48 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
   def do_DELETE(self):
     start = time.time()
-    args = self.path.split('/')
-    id = int(args[-1])
-    if args[-2] == 'container':
-      topologyManager.delete_container(id)
-    else:
-      topologyManager.delete_vm(id)  
+    if self.path.startswith('/api/docker'):
+      try:
+        args = self.path.split('/')
+        container_name = args[-1]
+        docker.delete_container(container_name)
+        response = {}
+      except Exception as e: 
+        response = {}
+        response['error'] = repr(e)
+        traceback.print_exc(file=sys.stdout)
 
+    response['time'] = '{0:.2f}'.format(time.time() - start)
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
     self.end_headers()
-    
-    response = {
-      'time': '{0:.2f}'.format(time.time() - start)
-    }
     self.wfile.write(json.dumps(response))
-    return
 
   def do_PUT(self):
     start = time.time()
-    args = self.path.split('/')
-    container_id = int(args[-1])
-    put_data_string = self.rfile.read(int(self.headers['Content-Length']))
-    put_data = json.loads(put_data_string)
-    cpuset = put_data['cpuset']
-    mem = put_data['mem_units']
-    container = topologyManager.update_container(container_id, cpuset, mem)
+    if self.path.startswith('/api/docker'):
+      try:
+        args = self.path.split('/')
+        container_name = args[-1]
+        put_data_string = self.rfile.read(int(self.headers['Content-Length']))
+        put_data = json.loads(put_data_string)
+        cpuset = put_data['cpuset']
+        mem_units = put_data['mem_units']
+        docker.update_container(container_name, cpuset, mem_units)
+        response = {
+          'name': container_name,
+          'cpuset': cpuset,
+          'mem_units': mem_units
+        }
+      except Exception as e: 
+        response = {}
+        response['error'] = repr(e)
+        traceback.print_exc(file=sys.stdout)
+
+    response['time'] = '{0:.2f}'.format(time.time() - start)
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
     self.end_headers()
-    
-    response = {
-      'id': container.id,
-      'cpuset': container.cpuset,
-      'mem_units': container.mem_units,
-      'mem': container.mem,
-      'time': '{0:.2f}'.format(time.time() - start)
-    }
     self.wfile.write(json.dumps(response))
     return
 
