@@ -95,7 +95,7 @@ def execute(plan):
             'mem_units': int(new_allocation[vm][container]['mem_units'])
           }
           print 'payload', payload
-          r = requests.post('http://{}:8000/api/docker/run'.format(ip_addr), json=payload)
+          r = requests.post('http://{}:8000/api/docker/run'.format(ip_addr), data=json.dumps(payload))
           print 'run container', ip_addr, r.text
           allocation[vm_name]['tiers'][container] = {
             'cpu_cores': len(payload['cpuset']),
@@ -114,7 +114,7 @@ def execute(plan):
               'mem_units': int(new_allocation[vm][container]['mem_units'])
             }
             print 'payload', payload
-            r = requests.post('http://{}:8000/api/docker/run'.format(ip_addr), json=payload)
+            r = requests.post('http://{}:8000/api/docker/run'.format(ip_addr), data=json.dumps(payload))
             print 'run container', ip_addr, r.text
             allocation[vm]['tiers'][container] = {
               'cpu_cores': len(payload['cpuset']),
@@ -131,7 +131,7 @@ def execute(plan):
                 'mem_units': int(new_allocation[vm][container]['mem_units'])
               }
               print 'payload', payload
-              r = requests.put('http://{}:8000/api/docker/{}'.format(ip_addr, container), json=payload)
+              r = requests.put('http://{}:8000/api/docker/{}'.format(ip_addr, container), data=json.dumps(payload))
               print 'update container', ip_addr, r.text, payload
               allocation[vm]['tiers'][container] = {
                 'cpu_cores': len(payload['cpuset']),

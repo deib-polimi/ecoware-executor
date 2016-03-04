@@ -90,8 +90,8 @@ class MonoliticTranslator:
   def _allocation2plan(self, new_allocation, topology):
     result = []
     for vm_key in topology:
-      if 'used' in topology[vm_key]:
-        used = topology[vm_key]['used']
+      if 'tiers' in topology[vm_key]:
+        used = topology[vm_key]['tiers']
         if not vm_key in new_allocation:
           action = Action(ActionType.vm_delete, vm_key)
           result.append(action)
@@ -108,9 +108,9 @@ class MonoliticTranslator:
       apps = new_allocation[vm_key]
       for app_key in apps:
         demand = apps[app_key]
-        if 'used' in topology[vm_key] and app_key in topology[vm_key]['used']:
-          if (topology[vm_key]['used'][app_key]['cpu_cores'] != demand['cpu_cores'] or
-            topology[vm_key]['used'][app_key]['mem_units'] != demand['mem_units']):
+        if 'tiers' in topology[vm_key] and app_key in topology[vm_key]['tiers']:
+          if (topology[vm_key]['tiers'][app_key]['cpu_cores'] != demand['cpu_cores'] or
+            topology[vm_key]['tiers'][app_key]['mem_units'] != demand['mem_units']):
             action = Action(ActionType.modify, vm_key, app_key, demand['cpu_cores'], demand['mem_units'])
             result.append(action)
         else:
