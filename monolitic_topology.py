@@ -3,6 +3,7 @@
 import copy
 import json
 import requests
+import time
 
 import aws_driver
 import simple_executor
@@ -12,14 +13,14 @@ from action import ActionType
 _topology = {
   'app': {
     'name': 'Ecoware',
-    'auto_scale_group_name': 'monolitic-experiments',
+    'auto_scale_group_name': 'monolithic-experiments',
     'vm_cpu_cores': 2,
     'vm_mem_units': 8,
     'tiers': {
       'pwitter-web': {
         'image': 'pwitter-web',
         'docker_params': '-p 8080:5000 --add-host="db:172.31.31.123"',
-        'entrypoint_params': '-w 3 -k eventless'
+        'entrypoint_params': '-w 3 -k eventlet'
       },
       'rubis-jboss': {
         'image': 'polimi/rubis-jboss:nosensors',
@@ -59,7 +60,13 @@ def execute(plan):
       capacity = len(new_allocation)
       print 'capacity', capacity
       print 'aws group', group_name
+      start = time.time()
       vms = aws_driver.start_virtual_machines(group_name, capacity)
+      finish = time.time()
+      print start, finish, finish - start
+      if finish - start > 10:
+        print 'SLEEP 30 seconds to wait till OS is booted'  
+        time.sleep(30)
       print 'VMS', vms
       i = 0
       for vm_name, ip_addr in vms:

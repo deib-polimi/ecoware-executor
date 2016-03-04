@@ -111,7 +111,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         response = {}
         response['error'] = repr(e)
         traceback.print_exc(file=sys.stdout)
-    if self.path.startswith('/api/monolitic/executor'):
+    elif self.path.startswith('/api/monolitic/executor'):
       try:
         post_data_string = self.rfile.read(int(self.headers['Content-Length']))
         post_data = json.loads(post_data_string)
@@ -122,7 +122,7 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         response = {}
         response['error'] = repr(e)
         traceback.print_exc(file=sys.stdout)
-    if self.path.startswith('/api/monolitic/translator'):
+    elif self.path.startswith('/api/monolitic/translator'):
       try:
         post_data_string = self.rfile.read(int(self.headers['Content-Length']))
         post_data = json.loads(post_data_string)

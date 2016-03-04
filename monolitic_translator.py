@@ -40,18 +40,25 @@ class MonoliticTranslator:
   def translate(self, plan_json, topology):
     if self.need_solution(plan_json, topology):
       print 'need solution'
+      if len(plan_json) == 0:
+        allocation = {}
+        return self._allocation2plan(allocation, topology) 
       topology = self._init_vm(plan_json, topology)
       temp = self._solve_ilp(plan_json, topology)
       allocation = self._solve_ilp(plan_json, topology)
       print 'new_allocation', allocation
       return self._allocation2plan(allocation, topology)
     else:
+      allocation = {}
       print 'no need solution'
       return []
 
   def translate2allocation(self, plan_json, topology):
     if self.need_solution(plan_json, topology):
       print 'need solution'
+      if len(plan_json) == 0:
+        allocation = {}
+        return allocation 
       topology = self._init_vm(plan_json, topology)
       print 'allocation', topology
       temp = self._solve_ilp(plan_json, topology)
@@ -61,6 +68,8 @@ class MonoliticTranslator:
       return topology
 
   def need_solution(self, plan_json, topology):
+    if len(plan_json) == 0 and len(topology) != 0:
+      return True
     demand = {}
     for vm in topology:
       if 'used' in topology[vm]:
@@ -289,7 +298,7 @@ def main():
   allocation = {}
 
   translator = MonoliticTranslator()
-  actions = translator.translate(plan, allocation)
+  actions = translator.tranate(plan, allocation)
   string_actions = map(lambda x: x.__str__(), actions)
   print 'plan=', plan
   print 'allocation=', allocation
