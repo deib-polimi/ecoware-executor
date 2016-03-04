@@ -1,24 +1,29 @@
 #!/usr/bin/python
 
 import copy
+import json
+import requests
 
 import aws_driver
 import simple_executor
+from monolitic_translator import MonoliticTranslator
+from action import ActionType
 
 _topology = {
   'app': {
     'name': 'Ecoware',
-    'auto_scale_group_name': 'ex3',
+    'auto_scale_group_name': 'monolitic-experiments',
     'vm_cpu_cores': 2,
     'vm_mem_units': 8,
     'tiers': {
       'pwitter-web': {
         'image': 'pwitter-web',
         'docker_params': '-p 8080:5000 --add-host="db:172.31.31.123"',
+        'entrypoint_params': '-w 3 -k eventless'
       },
       'rubis-jboss': {
         'image': 'polimi/rubis-jboss:nosensors',
-        'docker_params': '-p 80:8080 --add-host="db:172.31.18.15"',
+        'docker_params': '-p 80:8080 --add-host="db:172.31.31.123"',
         'entrypoint_params': '/opt/jboss-4.2.2.GA/bin/run.sh --host=0.0.0.0 --bootdir=/opt/rubis/rubis-cvs-2008-02-25/Servlets_Hibernate -c default'
       }
     }
@@ -26,9 +31,6 @@ _topology = {
 }
 
 _allocation = {
-  'Ecoware': {
-    'desired_capacity': 0
-  }
 }
 def get_topology():
   return _topology
@@ -38,24 +40,125 @@ def set_topology(new_topology):
   _topology = new_topology
 
 def get_allocation():
-  groups = aws_driver.get_auto_scale_groups()
-  allocation = copy.deepcopy(_allocation)
-  for app in allocation:
-    if app in _topology:
-      group_name = _topology[app].get('auto_scale_group_name')
-      if group_name:
-        capacity = groups[group_name]
-        allocation[app]['desired_capacity'] = capacity
-  return allocation
+    return _allocation
 
 def execute(plan):
-  global _allocation
-  _allocation.clear()
-  for tier in plan:
-    cpu_cores = plan[tier]['cpu_cores']
-    mem_units = plan[tier]['mem_units']
-    _allocation[tier] = {
-      'cpu_cores': cpu_cores,
-      'mem_units': mem_units
-    }
-  simple_executor.execute(plan, _topology)
+  global _allocation, _topology
+  _allocation.pop('time', None)
+  old_allocation = copy.deepcopy(_allocation)
+  topology = _topology
+  allocation = _allocation
+  
+  group_name = topology['app']['auto_scale_group_name']
+  translator = MonoliticTranslator()
+  new_allocation = translator.translate2allocation(plan, allocation)
+  print 'new_allocation', new_allocation
+  vm_name_dict = {}
+  if allocation != new_allocation:
+    if len(allocation) < len(new_allocation): # only create new vm,
+      capacity = len(new_allocation)
+      print 'capacity', capacity
+      print 'aws group', group_name
+      vms = aws_driver.start_virtual_machines(group_name, capacity)
+      print 'VMS', vms
+      i = 0
+      for vm_name, ip_addr in vms:
+        print vm_name, ip_addr, vm_name_dict
+        if not vm_name in allocation:
+          vm_name_dict['new_vm{}'.format(i)] = (vm_name, ip_addr)
+          i += 1
+        print 'topology', topology, 'url', 'http://{}:8000/api/monolitic/topology'.format(ip_addr)
+        r = requests.post('http://{}:8000/api/monolitic/topology'.format(ip_addr), json=topology)
+        print 'set topology to ', ip_addr, r.text
+    print 123
+    used_ip = {}
+    print vm_name_dict
+    for vm in new_allocation:
+      print vm
+      if vm.startswith('new_vm'):
+        vm_name, ip_addr = vm_name_dict[vm]
+        print vm, vm_name, ip_addr
+        # create VM
+        allocation[vm_name] = {
+          'ip': ip_addr,
+          'cpu_cores': 2,
+          'mem_units': 8,
+          'tiers': {}
+        }
+
+        # create Containers
+        for container in new_allocation[vm]:
+          payload = {
+            'ip': ip_addr,
+            'name': container,
+            'cpuset': range(0, int(new_allocation[vm][container]['cpu_cores'])),
+            'mem_units': int(new_allocation[vm][container]['mem_units'])
+          }
+          print 'payload', payload
+          r = requests.post('http://{}:8000/api/docker/run'.format(ip_addr), json=payload)
+          print 'run container', ip_addr, r.text
+          allocation[vm_name]['tiers'][container] = {
+            'cpu_cores': len(payload['cpuset']),
+            'mem_units': payload['mem_units']
+          }
+      else: # existing vm
+        if not vm in allocation: raise Error('Unknown vm: ' + vm)
+        ip_addr = allocation[vm]['ip']
+        for container in new_allocation[vm]:
+          old_containers = allocation[vm]['tiers']
+          if not container in old_containers:
+            # create new container
+            payload = {
+              'name': container,
+              'cpuset': range(0, int(new_allocation[vm][container]['cpu_cores'])),
+              'mem_units': int(new_allocation[vm][container]['mem_units'])
+            }
+            print 'payload', payload
+            r = requests.post('http://{}:8000/api/docker/run'.format(ip_addr), json=payload)
+            print 'run container', ip_addr, r.text
+            allocation[vm]['tiers'][container] = {
+              'cpu_cores': len(payload['cpuset']),
+              'mem_units': payload['mem_units']
+            }
+          else:
+            old_container_data = old_containers[container]
+            new_container_data = new_allocation[vm][container]
+            if (old_container_data['cpu_cores'] != new_container_data['cpu_cores'] or
+                old_container_data['mem_units'] != new_container_data['mem_units']):
+              # update container
+              payload = {
+                'cpuset': range(0, int(new_allocation[vm][container]['cpu_cores'])),
+                'mem_units': int(new_allocation[vm][container]['mem_units'])
+              }
+              print 'payload', payload
+              r = requests.put('http://{}:8000/api/docker/{}'.format(ip_addr, container), json=payload)
+              print 'update container', ip_addr, r.text, payload
+              allocation[vm]['tiers'][container] = {
+                'cpu_cores': len(payload['cpuset']),
+                'mem_units': payload['mem_units']
+              }
+
+        for container_name in allocation[vm]['tiers'].keys():
+          if not container_name in new_allocation[vm]:
+            # delete container
+              r = requests.delete('http://{}:8000/api/docker/{}'.format(ip_addr, container_name))
+              print 'update container', ip_addr, r.text, payload
+              del allocation[vm]['tiers'][container_name]
+
+    for vm_name in old_allocation.keys():
+      if not vm_name in new_allocation:
+        aws_driver.remove_vm(vm_name, group_name)
+        del allocation[vm_name]
+
+    print 'plan=', plan
+    print 'allocation=', allocation
+  return allocation
+
+def translate(plan):
+  global _allocation, _topology
+  _allocation.pop('time', None)
+  topology = _topology
+  allocation = _allocation
+  translator = MonoliticTranslator()
+  actions = translator.translate(plan, allocation)
+  return actions

@@ -14,7 +14,7 @@
           console.log(resp)
           var json = JSON.stringify(resp, null, '\t');
           console.log(json)
-          $('#plan-area').val(json);
+          $('#allocation-area').val(json);
           toastr.success('Plan is processed successfully in {0}s'.format(resp.time));
         }
         
@@ -46,8 +46,7 @@
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: function(resp) {
-          // sendPlan($btn);
-          alert('ok')
+          sendPlan($btn);
         },
         error: function() {
           $btn.button('reset');

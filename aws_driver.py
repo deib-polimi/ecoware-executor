@@ -10,6 +10,12 @@ import logging
 from xml.etree import ElementTree
 from collections import OrderedDict
 
+boto3.setup_default_session(region_name='us-west-2')
+
+os.environ["AWS_ACCESS_KEY_ID"] = "AKIAIOLT23JQ7DHIXATQ"
+os.environ["AWS_SECRET_ACCESS_KEY"] = ""
+
+
 def set_desired_capacity(group_name, capacity):
   client = boto3.client('autoscaling')
   return client.update_auto_scaling_group(
@@ -73,7 +79,7 @@ def get_ip_addresses(instance_ids):
       instances.append((instance_id, public_ip))
   return instances
 
-def detach_instances(instance_ids):
+def detach_instances(instance_ids, group_name):
   client = boto3.client('autoscaling')
   response = client.detach_instances(
     InstanceIds=instance_ids,
@@ -87,9 +93,9 @@ def terminate_instances(instance_ids):
     InstanceIds=instance_ids
   )
 
-def remove_vm(instance_id):
+def remove_vm(instance_id, group_name):
   instance_ids = [instance_id]
-  detach_instances(instance_ids)
+  detach_instances(instance_ids, group_name)
   terminate_instances(instance_ids)
 
 if __name__ == '__main__':

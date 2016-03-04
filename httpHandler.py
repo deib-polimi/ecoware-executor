@@ -111,6 +111,31 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         response = {}
         response['error'] = repr(e)
         traceback.print_exc(file=sys.stdout)
+    if self.path.startswith('/api/monolitic/executor'):
+      try:
+        post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+        post_data = json.loads(post_data_string)
+        post_data.pop("time", None)
+        new_allocation = monolitic_topology.execute(post_data)
+        response = new_allocation
+      except Exception as e: 
+        response = {}
+        response['error'] = repr(e)
+        traceback.print_exc(file=sys.stdout)
+    if self.path.startswith('/api/monolitic/translator'):
+      try:
+        post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+        post_data = json.loads(post_data_string)
+        post_data.pop("time", None)
+        actions = monolitic_topology.translate(post_data)
+        string_actions = map(lambda x: x.__str__(), actions)
+        response = {
+          'actions': string_actions
+        }
+      except Exception as e: 
+        response = {}
+        response['error'] = repr(e)
+        traceback.print_exc(file=sys.stdout)
     elif self.path.startswith('/api/docker/stop'):
       try:
         post_data_string = self.rfile.read(int(self.headers['Content-Length']))
@@ -230,6 +255,8 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     return
 
 if __name__ == '__main__':
+  logging.getLogger('requests').setLevel(logging.WARNING)
+  logging.getLogger('botocore').setLevel(logging.WARNING)
   topologyManager.init()
   listen_ip = '0.0.0.0'
   if len(argv) >= 2:
