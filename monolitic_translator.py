@@ -63,16 +63,16 @@ class MonoliticTranslator:
   def need_solution(self, plan_json, topology):
     demand = {}
     for vm in topology:
-      if 'tiers' in topology[vm]:
-        for app in topology[vm]['tiers']:
+      if 'used' in topology[vm]:
+        for app in topology[vm]['used']:
           if not app in plan_json:
             return True
           if not app in demand:
             demand[app] = {}
             demand[app]['cpu_cores'] = 0
             demand[app]['mem_units'] = 0
-          demand[app]['cpu_cores'] += topology[vm]['tiers'][app]['cpu_cores']
-          demand[app]['mem_units'] += topology[vm]['tiers'][app]['mem_units']
+          demand[app]['cpu_cores'] += topology[vm]['used'][app]['cpu_cores']
+          demand[app]['mem_units'] += topology[vm]['used'][app]['mem_units']
     for app in plan_json:
       if (not app in demand or 
           plan_json[app]['cpu_cores'] != demand[app]['cpu_cores'] or
@@ -90,8 +90,8 @@ class MonoliticTranslator:
   def _allocation2plan(self, new_allocation, topology):
     result = []
     for vm_key in topology:
-      if 'tiers' in topology[vm_key]:
-        used = topology[vm_key]['tiers']
+      if 'used' in topology[vm_key]:
+        used = topology[vm_key]['used']
         if not vm_key in new_allocation:
           action = Action(ActionType.vm_delete, vm_key)
           result.append(action)
@@ -108,10 +108,10 @@ class MonoliticTranslator:
       apps = new_allocation[vm_key]
       for app_key in apps:
         demand = apps[app_key]
-        if 'tiers' in topology[vm_key] and app_key in topology[vm_key]['tiers']:
-          if (topology[vm_key]['tiers'][app_key]['cpu_cores'] != demand['cpu_cores'] or
-            topology[vm_key]['tiers'][app_key]['mem_units'] != demand['mem_units']):
-            action = Action(ActionType.modify, vm_key, app_key, demand['cpu_cores'], demand['mem_units'])
+        if 'used' in topology[vm_key] and app_key in topology[vm_key]['used']:
+          if (topology[vm_key]['used'][app_key]['cpu_cores'] != demand['cpu_cores'] or
+            topology[vm_key]['used'][app_key]['mem_units'] != demand['mem_units']):
+            action = Action(ActionType.container_set, vm_key, app_key, demand['cpu_cores'], demand['mem_units'])
             result.append(action)
         else:
           action = Action(ActionType.container_create, vm_key, app_key, demand['cpu_cores'], demand['mem_units'])
@@ -123,63 +123,102 @@ class MonoliticTranslator:
     solver = pywraplp.Solver('Solver', pywraplp.Solver.CBC_MIXED_INTEGER_PROGRAMMING)
 
     # variables
-    usage = {}
+    vm_usage = {}
+    vm_idle = {}
+    tier_usage = {}
+    tier_idle = {}
     cpu = {}
     mem = {}
-    # MIN_RAM = 0.5
     for vm in topology:
       cpu[vm] = {}
       mem[vm] = {}
-      usage[vm] = {}
+      vm_usage[vm] = solver.BoolVar('vm_usage_{0}'.format(vm))
+      vm_idle[vm] = solver.BoolVar('vm_idle_{0}'.format(vm))
+      tier_usage[vm] = {}
+      tier_idle[vm] = {}
       for tier in plan:
         cpu[vm][tier] = solver.IntVar(0, solver.infinity(), 'cpu_{0}_{1}'.format(vm, tier))
         mem[vm][tier] = solver.IntVar(0, solver.infinity(), 'mem_{0}_{1}'.format(vm, tier))
-        usage[vm][tier] = solver.BoolVar('used_{0}_{1}'.format(vm, tier))
+        tier_usage[vm][tier] = solver.BoolVar('tier_usage_{0}_{1}'.format(vm, tier))
+        tier_idle[vm][tier] = solver.BoolVar('tier_idle_{0}_{1}'.format(vm, tier))
+    
+    # wDockerDelete < wDockerSet <  < wDockerCreate < wVmDelete < wVmUse < wVmCreate
+    wDockerDelete = 1
+    wDockerSet = 2
+    wDockerCreate = 3
 
+    wVmDelete = 10
+    wVmUse = 11
+    wVmCreate = 20
+    
     objective = solver.Objective()
     for vm in topology:
+      if vm.startswith('new_vm'):
+        objective.SetCoefficient(vm_usage[vm], wVmCreate)
+      else:
+        objective.SetCoefficient(vm_usage[vm], wVmUse)
+        objective.SetCoefficient(vm_idle[vm], wVmDelete)
+
       for tier in plan:
-        weight = 5 # w(vm_use)
         if 'used' in topology[vm]:
           if tier in topology[vm]['used']:
-            weight = 1 # w(container_set)
-          else:
-            pass
+            objective.SetCoefficient(tier_usage[vm][tier], wDockerSet)
+            objective.SetCoefficient(tier_idle[vm][tier], wDockerDelete)
+          else: # new container
+            objective.SetCoefficient(tier_usage[vm][tier], wDockerCreate)
         else:
-          k1 = 20
-          k2 = 3
-        objective.SetCoefficient(usage[vm][tier], k1)
+          objective.SetCoefficient(tier_usage[vm][tier], wDockerCreate)
     objective.SetMinimization()
 
     for vm in topology:
-      cpu_availability = solver.Constraint(0, topology[vm]['cpu_cores'])
-      mem_availability = solver.Constraint(0, topology[vm]['mem_units'])
+      # sum{i in Tier} cpu[i, j] - cpu_max[j] * vm_usage[j] <= 0
+      cpu_availability = solver.Constraint(-solver.infinity(), 0)
+      mem_availability = solver.Constraint(-solver.infinity(), 0)
+      cpu_availability.SetCoefficient(vm_usage[vm], -topology[vm]['cpu_cores'])
+      mem_availability.SetCoefficient(vm_usage[vm], -topology[vm]['mem_units'])
       for tier in plan:
         cpu_availability.SetCoefficient(cpu[vm][tier], 1)
 
         mem_availability.SetCoefficient(mem[vm][tier], 1)
 
-        used_cpu_activation = solver.Constraint(0, solver.infinity())
-        used_cpu_activation.SetCoefficient(cpu[vm][tier], -1)
-        used_cpu_activation.SetCoefficient(usage[vm][tier], topology[vm]['cpu_cores'])
+        # cpu_max[j] * tier_usage[i, j] - cpu[i, j] >= 0
+        cpu_activation = solver.Constraint(0, solver.infinity())
+        cpu_activation.SetCoefficient(tier_usage[vm][tier], topology[vm]['cpu_cores'])
+        cpu_activation.SetCoefficient(cpu[vm][tier], -1)
 
-        used_mem_activation = solver.Constraint(0, solver.infinity())
-        used_mem_activation.SetCoefficient(mem[vm][tier], -1)
-        used_mem_activation.SetCoefficient(usage[vm][tier], topology[vm]['mem_units'])
+        # mem_max[j] * tier_usage[i, j] - mem[i, j] >= 0
+        ram_activation = solver.Constraint(0, solver.infinity())
+        ram_activation.SetCoefficient(tier_usage[vm][tier], topology[vm]['mem_units'])
+        ram_activation.SetCoefficient(mem[vm][tier], -1)
 
+        # subject to CPU_RAM_activation{i in Tier, j in VM}:
+        #   mem_max[j] * cpu[i, j] - mem[i, j] >= 0;
         cpu_ram_activation = solver.Constraint(0, solver.infinity())
-        cpu_ram_activation.SetCoefficient(mem[vm][tier], -1)
         cpu_ram_activation.SetCoefficient(cpu[vm][tier], topology[vm]['mem_units'])
+        cpu_ram_activation.SetCoefficient(mem[vm][tier], -1)
 
+        # subject to RAM_CPU_activation{i in Tier, j in VM}:
+          # cpu_max[j] * mem[i, j] - cpu[i, j] >= 0
         ram_cpu_activation = solver.Constraint(0, solver.infinity())
-        ram_cpu_activation.SetCoefficient(cpu[vm][tier], -1)
         ram_cpu_activation.SetCoefficient(mem[vm][tier], topology[vm]['cpu_cores'])
+        ram_cpu_activation.SetCoefficient(cpu[vm][tier], -1)
 
-        # min_ram = solver.Constraint(0, solver.infinity())
-        # min_ram.SetCoefficient(mem[vm][tier], 1)
-        # min_ram.SetCoefficient(used[vm][tier], -MIN_RAM)
+        # link tier_idle to tier_usage
+        # subject to link_tier_idle{i in Tier, j in VM}:
+        #   tier_idle[i, j] + tier_usage[i, j] = 1;
+        link_tier_idle = solver.Constraint(1, 1)
+        link_tier_idle.SetCoefficient(tier_idle[vm][tier], 1)
+        link_tier_idle.SetCoefficient(tier_usage[vm][tier], 1)
+
+        # link vm_idle to vm_usage
+        # subject to link_vm_idle{j in VM}:
+        #   vm_idle[j] + vm_usage[j] = 1;
+        link_vm_idle = solver.Constraint(1, 1)
+        link_vm_idle.SetCoefficient(vm_idle[vm], 1)
+        link_vm_idle.SetCoefficient(vm_usage[vm], 1)
       
     for tier in plan:
+      # sum{j in VM} cpu[i, j] >= cpu_demand[i];
       cpu_demand = solver.Constraint(plan[tier]['cpu_cores'], plan[tier]['cpu_cores'])
       mem_demand = solver.Constraint(plan[tier]['mem_units'], plan[tier]['mem_units'])
       for vm in topology:
@@ -191,7 +230,7 @@ class MonoliticTranslator:
     for vm in topology:
       for tier in plan:
         # print '{0}={1} cpu={2} mem={3}'.format(usage[vm][tier], usage[vm][tier].solution_value(), cpu[vm][tier].solution_value(), mem[vm][tier].solution_value())
-        if usage[vm][tier].solution_value() > 0:
+        if tier_usage[vm][tier].solution_value() > 0:
           allocation.setdefault(vm, {})
           allocation[vm].setdefault(tier, {})
           allocation[vm][tier]['cpu_cores'] = cpu[vm][tier].solution_value()
@@ -222,7 +261,7 @@ def main():
   topology = {
     "app": {
       "vm_cpu_cores": 2,
-      "tiers": {
+      "used": {
         "jboss": {
           "image": "httpd"
         },

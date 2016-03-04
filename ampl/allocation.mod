@@ -91,7 +91,7 @@ subject to RAM_CPU_activation{i in Tier, j in VM}:
 subject to link_tier_idle{i in Tier, j in VM}:
   tier_idle[i, j] + tier_usage[i, j] = 1;
 
-# link tier_idle to tier_usage
+# link vm_idle to vm_usage
 subject to link_vm_idle{j in VM}:
   vm_idle[j] + vm_usage[j] = 1;
 
