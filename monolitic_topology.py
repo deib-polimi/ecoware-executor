@@ -90,7 +90,7 @@ def execute(plan):
           'ip': ip_addr,
           'cpu_cores': 2,
           'mem_units': 8,
-          'tiers': {}
+          'used': {}
         }
 
         # create Containers
@@ -104,7 +104,7 @@ def execute(plan):
           print 'payload', payload
           r = requests.post('http://{}:8000/api/docker/run'.format(ip_addr), data=json.dumps(payload))
           print 'run container', ip_addr, r.text
-          allocation[vm_name]['tiers'][container] = {
+          allocation[vm_name]['used'][container] = {
             'cpu_cores': len(payload['cpuset']),
             'mem_units': payload['mem_units']
           }
@@ -112,7 +112,7 @@ def execute(plan):
         if not vm in allocation: raise Error('Unknown vm: ' + vm)
         ip_addr = allocation[vm]['ip']
         for container in new_allocation[vm]:
-          old_containers = allocation[vm]['tiers']
+          old_containers = allocation[vm]['used']
           if not container in old_containers:
             # create new container
             payload = {
@@ -123,7 +123,7 @@ def execute(plan):
             print 'payload', payload
             r = requests.post('http://{}:8000/api/docker/run'.format(ip_addr), data=json.dumps(payload))
             print 'run container', ip_addr, r.text
-            allocation[vm]['tiers'][container] = {
+            allocation[vm]['used'][container] = {
               'cpu_cores': len(payload['cpuset']),
               'mem_units': payload['mem_units']
             }
@@ -140,17 +140,17 @@ def execute(plan):
               print 'payload', payload
               r = requests.put('http://{}:8000/api/docker/{}'.format(ip_addr, container), data=json.dumps(payload))
               print 'update container', ip_addr, r.text, payload
-              allocation[vm]['tiers'][container] = {
+              allocation[vm]['used'][container] = {
                 'cpu_cores': len(payload['cpuset']),
                 'mem_units': payload['mem_units']
               }
 
-        for container_name in allocation[vm]['tiers'].keys():
+        for container_name in allocation[vm]['used'].keys():
           if not container_name in new_allocation[vm]:
             # delete container
               r = requests.delete('http://{}:8000/api/docker/{}'.format(ip_addr, container_name))
               print 'update container', ip_addr, r.text, payload
-              del allocation[vm]['tiers'][container_name]
+              del allocation[vm]['used'][container_name]
 
     for vm_name in old_allocation.keys():
       if not vm_name in new_allocation:

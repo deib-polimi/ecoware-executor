@@ -270,7 +270,7 @@ def main():
   topology = {
     "app": {
       "vm_cpu_cores": 2,
-      "used": {
+      "tiers": {
         "jboss": {
           "image": "httpd"
         },
