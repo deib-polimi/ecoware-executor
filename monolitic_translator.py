@@ -219,8 +219,8 @@ class MonoliticTranslator:
       
     for tier in plan:
       # sum{j in VM} cpu[i, j] >= cpu_demand[i];
-      cpu_demand = solver.Constraint(plan[tier]['cpu_cores'], plan[tier]['cpu_cores'])
-      mem_demand = solver.Constraint(plan[tier]['mem_units'], plan[tier]['mem_units'])
+      cpu_demand = solver.Constraint(plan[tier]['cpu_cores'], solver.infinity())
+      mem_demand = solver.Constraint(plan[tier]['mem_units'], solver.infinity())
       for vm in topology:
         cpu_demand.SetCoefficient(cpu[vm][tier], 1)
         mem_demand.SetCoefficient(mem[vm][tier], 1)

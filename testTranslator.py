@@ -18,7 +18,7 @@ class TestTranslator(unittest.TestCase):
     return result
 
   def test(self):
-    i = 4
+    i = 1
     while True:
       plan_file = 'tests/plan{0}.json'.format(i)
       if isfile(plan_file):
@@ -36,17 +36,16 @@ class TestTranslator(unittest.TestCase):
         self.assertEquals(string_actions, expected)
       else:
         break
-      break
       i += 1
 
-  # def test_allocation2plan(self):
-  #   allocation = self.read_json('tests/allocation1.0.json')
-  #   previous_allocation = self.read_json('tests/topology1.json')
-  #   translator = MonoliticTranslator()
-  #   actions = translator._allocation2plan(allocation, previous_allocation)
-  #   string_actions = map(lambda x: x.__str__(), actions)
-  #   result = self.read_json('tests/result1.0.json')
-  #   self.assertEquals(sorted(string_actions), sorted(result))
+  def test_allocation2plan(self):
+    allocation = self.read_json('tests/allocation1.0.json')
+    previous_allocation = self.read_json('tests/topology1.json')
+    translator = MonoliticTranslator()
+    actions = translator._allocation2plan(allocation, previous_allocation)
+    string_actions = map(lambda x: x.__str__(), actions)
+    result = self.read_json('tests/result1.0.json')
+    self.assertEquals(sorted(string_actions), sorted(result))
 
   # def test_no_solution(self):
   #   plan_file = 'tests/plan_no_sol.json'
