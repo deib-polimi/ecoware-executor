@@ -2,8 +2,9 @@
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-import SimpleHTTPServer
-import SocketServer
+from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+from SocketServer import ThreadingMixIn
+import threading
 import json
 import time
 import sys
@@ -17,7 +18,7 @@ import monolitic_topology
 import docker
 from vm import Vm
 
-class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class HttpHandler(BaseHTTPRequestHandler):
   def do_GET(self):
     start = time.time()
     if self.path == '/':
@@ -254,6 +255,9 @@ class HttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     self.wfile.write(json.dumps(response))
     return
 
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """Handle requests in a separate thread."""
+
 if __name__ == '__main__':
   logging.getLogger('requests').setLevel(logging.WARNING)
   logging.getLogger('botocore').setLevel(logging.WARNING)
@@ -264,6 +268,6 @@ if __name__ == '__main__':
   else:
     port = 8000
 
-  server = SocketServer.TCPServer((listen_ip, port), HttpHandler)
+  server = ThreadedHTTPServer((listen_ip, port), HttpHandler)
   print 'server has started at {0}:{1}'.format(listen_ip, port)
   server.serve_forever()
