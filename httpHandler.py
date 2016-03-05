@@ -66,17 +66,25 @@ class HttpHandler(BaseHTTPRequestHandler):
       docker.update_container(tier, cpuset, mem_units)
 
   def do_GET(self):
-    start = time.time()
-    if self.path.startswith('/api/allocation'):
-      response = copy.deepcopy(topology)
-    elif self.path.startswith('/api/inspect'):
-      response = docker.get_allocation()
-    response['time'] = '{0:.2f}'.format(time.time() - start)
-    self.send_response(200)
-    self.send_header('Content-type', 'application/json')
-    self.end_headers()
-    self.wfile.write(json.dumps(response))
-    print 'response time {0:.2f}'.format(time.time() - start)
+    if self.path.startswith('/api/'):
+      start = time.time()
+      response = {}
+      try:
+        if self.path.startswith('/api/allocation'):
+          response = copy.deepcopy(topology)
+        elif self.path.startswith('/api/inspect'):
+          response = docker.get_allocation()
+
+        print 'response time {0:.2f}'.format(time.time() - start)
+      except Exception as e: 
+        response = {}
+        response['error'] = repr(e)
+        traceback.print_exc(file=sys.stdout)
+      response['time'] = '{0:.2f}'.format(time.time() - start)
+      self.send_response(200)
+      self.send_header('Content-type', 'application/json')
+      self.end_headers()
+      self.wfile.write(json.dumps(response))
     return
 
   def do_POST(self):

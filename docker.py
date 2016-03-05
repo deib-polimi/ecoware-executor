@@ -28,7 +28,7 @@ def get_allocation():
       info = json.loads(output)
       cpuset = info[0]['HostConfig']['CpusetCpus']
       mem = info[0]['HostConfig']['Memory']
-      mem_units = int(info[0]['HostConfig']['Memory'] / (1024 * 1024 * 512))
+      mem_units = int(mem / (1024 * 1024 * 512))
       result[container] = {
         'CpusetCpus': cpuset,
         'Memory': mem,
