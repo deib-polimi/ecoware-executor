@@ -183,24 +183,6 @@ class HttpHandler(BaseHTTPRequestHandler):
       post_data = json.loads(post_data_string)
       monolitic_topology.set_topology(post_data)
       response = {}
-    elif args[-1] == 'topology':
-      post_data = json.loads(post_data_string)
-      topologyManager.set_topology(post_data)
-      response = {}
-    elif args[-1] == 'plan':
-      post_data_string = self.rfile.read(int(self.headers['Content-Length']))
-      post_data = json.loads(post_data_string)
-      topologyManager.execute(post_data)
-      response = {}
-    else:
-      post_data_string = self.rfile.read(int(self.headers['Content-Length']))
-      post_data = json.loads(post_data_string)
-      host = post_data.get('host')
-      vm = topologyManager.create_vm(post_data['name'], post_data['cpu_cores'], post_data['mem_units'], host)
-      response = post_data
-      response['mem'] = vm.mem
-      response['id'] = vm.id
-      response['docker_port'] = vm.docker_port
     response['time'] = '{0:.2f}'.format(time.time() - start)
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
