@@ -15,6 +15,7 @@ import posixpath
 import urllib
 import os
 import shutil
+import copy
 from sets import Set
 from sys import argv
 
@@ -50,14 +51,31 @@ class HttpHandler(BaseHTTPRequestHandler):
       mem_units = plan[tier]['mem_units']
 
       if tier in topology:
-        cpuset = topology[tier]
+        cpuset = topology[tier]['cpuset']
         release_cpuset(cpuset)
+      else:
+        topology[tier] = {
+          'cpu_cores': cpu_cores,
+          'mem_units': mem_units
+        }
 
       cpuset = get_cpuset(cpu_cores)
-      topology[tier] = cpuset
+      topology[tier]['cpuset'] = cpuset
 
       print tier, cpu_cores, cpuset, mem_units
       docker.update_container(tier, cpuset, mem_units)
+
+  def do_GET(self):
+    start = time.time()
+    if self.path.startswith('/api/allocation'):
+      response = copy.deepcopy(topology)
+      response['time'] = '{0:.2f}'.format(time.time() - start)
+      self.send_response(200)
+      self.send_header('Content-type', 'application/json')
+      self.end_headers()
+      self.wfile.write(json.dumps(response))
+      print 'response time {0:.2f}'.format(time.time() - start)
+    return
 
   def do_POST(self):
     start = time.time()
