@@ -13,7 +13,7 @@ from action import ActionType
 _topology = {
   'app': {
     'name': 'Ecoware',
-    'auto_scale_group_name': 'monolithic-experiments',
+    'auto_scale_group_name': 'monolithic-ex-8cores',
     'vm_cpu_cores': 8,
     'vm_mem_units': 64,
     'tiers': {
