@@ -1,5 +1,13 @@
 # Executor
 
+## Dependencies
+python 2.7
+pip
+pip install requests
+wget  https://github.com/google/or-tools/releases/download/v2015-09/Google.OrTools.python.examples.3322.tar.gz
+tar xvf Google.OrTools.python.examples.3322.tar.gz
+cd 
+
 Implements the "Execute" part of the MAPE (Monitor Analyze Plan Execute) model.
 
 It has 3 branches: `csp`, `ilp` and `master`.

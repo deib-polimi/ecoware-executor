@@ -7,7 +7,6 @@ import copy
 from math import ceil
 
 import topologyManager
-from constraint import *
 from ortools.linear_solver import pywraplp
 from action import ActionType, Action
 

@@ -1,0 +1,4 @@
+[
+  "delete virtual machine 'vm0'",
+  "create 'db' container in 'vm1' virtual machine with cpu_cores=1.0 and mem=0.5gb"
+]

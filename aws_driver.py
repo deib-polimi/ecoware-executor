@@ -61,6 +61,7 @@ def start_virtual_machines(group_name, capacity):
   return get_ip_addresses(instance_ids)
 
 def get_ip_addresses(instance_ids):
+  
   ec2 = boto3.client('ec2')
   request = ec2.describe_instances(
     Filters=[

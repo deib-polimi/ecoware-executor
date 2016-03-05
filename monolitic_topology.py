@@ -77,7 +77,6 @@ def execute(plan):
         print 'topology', topology, 'url', 'http://{}:8000/api/monolitic/topology'.format(ip_addr)
         r = requests.post('http://{}:8000/api/monolitic/topology'.format(ip_addr), json=topology)
         print 'set topology to ', ip_addr, r.text
-    print 123
     used_ip = {}
     print vm_name_dict
     for vm in new_allocation:
