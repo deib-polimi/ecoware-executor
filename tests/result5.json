@@ -1,6 +1,0 @@
-[
-  "create virtual machine 'new_vm0' with cpu_cores=2 and mem=4.0gb", 
-  "create 'jboss' container in 'new_vm0' virtual machine with cpu_cores=2.0 and mem=0.5gb", 
-  "create 'db' container in 'vm2' virtual machine with cpu_cores=2.0 and mem=1.0gb", 
-  "create 'jboss' container in 'vm1' virtual machine with cpu_cores=2.0 and mem=0.5gb"
-]
