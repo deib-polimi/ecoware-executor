@@ -4,6 +4,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from SocketServer import ThreadingMixIn
+import SimpleHTTPServer
 import threading
 import json
 import time
