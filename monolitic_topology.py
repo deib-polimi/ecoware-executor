@@ -14,8 +14,8 @@ _topology = {
   'app': {
     'name': 'Ecoware',
     'auto_scale_group_name': 'monolithic-experiments',
-    'vm_cpu_cores': 2,
-    'vm_mem_units': 8,
+    'vm_cpu_cores': 8,
+    'vm_mem_units': 64,
     'tiers': {
       'pwitter-web': {
         'image': 'pwitter-web',
@@ -87,8 +87,8 @@ def execute(plan):
         # create VM
         allocation[vm_name] = {
           'ip': ip_addr,
-          'cpu_cores': 2,
-          'mem_units': 8,
+          'cpu_cores': 8,
+          'mem_units': 64,
           'used': {}
         }
 

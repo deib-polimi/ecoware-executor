@@ -23,8 +23,8 @@ class MonoliticTranslator:
       demand_cpu += plan[tier]['cpu_cores']
       demand_mem += plan[tier]['mem_units']
     vm_count = len(allocation)
-    vm_cpu = 2
-    vm_mem = 8
+    vm_cpu = 8
+    vm_mem = 64
     resources_cpu = vm_cpu * vm_count
     resources_mem = vm_mem * vm_count
     if demand_cpu > resources_cpu or demand_mem > resources_mem:
