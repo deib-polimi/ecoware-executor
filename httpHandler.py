@@ -47,17 +47,19 @@ class HttpHandler(BaseHTTPRequestHandler):
 
   def execute(self, plan):
     for tier in plan:
-      cpu_cores = plan[tier]['cpu_cores']
-      mem_units = plan[tier]['mem_units']
-
       if tier in topology:
         cpuset = topology[tier]['cpuset']
         release_cpuset(cpuset)
-      else:
-        topology[tier] = {
-          'cpu_cores': cpu_cores,
-          'mem_units': mem_units
-        }
+
+    for tier in plan:
+      cpu_cores = plan[tier]['cpu_cores']
+      mem_units = plan[tier]['mem_units']
+
+      if not tier in topology:
+        topology[tier] = {}
+
+      topology[tier]['cpu_cores'] = cpu_cores
+      topology[tier]['mem_units'] = mem_units
 
       cpuset = get_cpuset(cpu_cores)
       topology[tier]['cpuset'] = cpuset
