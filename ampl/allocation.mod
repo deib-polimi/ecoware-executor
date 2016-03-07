@@ -68,10 +68,10 @@ subject to RAM_availability{j in VM}:
   sum{i in Tier} mem[i, j] <= mem_max[j];
 
 subject to CPU_demand{i in Tier}:
-  sum{j in VM} cpu[i, j] >= cpu_demand[i];
+  sum{j in VM} cpu[i, j] = cpu_demand[i];
 
 subject to RAM_demand{i in Tier}:
-  sum{j in VM} mem[i, j] >= mem_demand[i];
+  sum{j in VM} mem[i, j] = mem_demand[i];
 
 subject to CPU_activation{i in Tier, j in VM}:
   cpu_max[j] * tier_usage[i, j] >= cpu[i, j];

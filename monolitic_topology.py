@@ -65,8 +65,8 @@ def execute(plan):
       finish = time.time()
       print start, finish, finish - start
       if finish - start > 10:
-        print 'SLEEP 30 seconds to wait till OS is booted'  
-        time.sleep(30)
+        print 'SLEEP 60 seconds to wait till OS is booted'  
+        time.sleep(60)
       print 'VMS', vms
       i = 0
       for vm_name, ip_addr in vms:
