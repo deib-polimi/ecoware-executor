@@ -17,7 +17,7 @@ def update_container(name, cpuset_arr, mem_units):
     print ex.output
     raise Exception(ex.output)
 
-def get_allocation():
+def inspect():
   containers = []
   cmd = 'docker ps -q'
   try:
@@ -36,7 +36,7 @@ def get_allocation():
       output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
       logging.info(cmd)
       info = json.loads(output)
-      name = info[0]['Name']
+      name = info[0]['Name'][1:]
       cpuset = info[0]['HostConfig']['CpusetCpus']
       mem = info[0]['HostConfig']['Memory']
       mem_units = int(mem / (1024 * 1024 * 512))
@@ -52,4 +52,4 @@ def get_allocation():
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)
-  print get_allocation()
+  print inspect()
