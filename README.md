@@ -4,16 +4,13 @@ API for managing docker containers
 ```
   [GET]    /api/allocation
   [GET]    /api/inspect
+  [GET]    /api/topology
   [PUT]    /api/topology
   [POST]   /api/container/new
   [PUT]    /api/containers
   [DELETE] /api/container/${container_name}
 ```
 ## API Description
-### [GET] /api/allocation
-Doesn't take input parameters and returns current allocation of docker containers. If method is called without updating or creating containers, then returns {}.
-### [GET] /api/inspect
-Doesn't take input parameters and returns the result of "docker inspect" command for all running containers.
 ### [PUT] /api/topology
 Example of input payload:
 ```
