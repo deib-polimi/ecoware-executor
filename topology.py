@@ -28,7 +28,7 @@ def release_cpuset(cpuset_arr):
   for i in cpuset_arr:
     used_cpus.discard(i)
 
-def update_containers(self, plan):
+def update_containers(plan):
   allocation = _allocation
   for tier in plan:
     if tier in allocation:
@@ -81,3 +81,11 @@ def create_container(container):
   endpoint_params = container.get('endpoint_params', '')
   logging.debug('Run container; {} {} {} {} {} {} {}'.format(tier, image, cpu_cores, cpuset, mem_units, docker_params, endpoint_params))
   docker.run_container(tier, image, cpuset, mem_units, docker_params, endpoint_params)
+
+def remove_container(tier):
+  allocation = _allocation
+  if tier in allocation:
+    cpuset = allocation[tier]['cpuset']
+    release_cpuset(cpuset)
+    del allocation[tier]
+  docker.remove_container(tier)

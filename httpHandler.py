@@ -92,6 +92,26 @@ class HttpHandler(BaseHTTPRequestHandler):
     self.end_headers()
     self.wfile.write(json.dumps(response))
 
+  def do_DELETE(self):
+    start = time.time()
+    try:
+      if self.path.startswith('/api/container'):
+        container_name = self.path.split('/')[-1]
+        topology.remove_container(container_name)
+        response = {}
+      else:
+        send_error(404)
+        return
+    except Exception as e: 
+      response = {}
+      response['error'] = repr(e)
+      traceback.print_exc(file=sys.stdout)
+    response['time'] = '{0:.2f}'.format(time.time() - start)
+    self.send_response(200)
+    self.send_header('Content-type', 'application/json')
+    self.end_headers()
+    self.wfile.write(json.dumps(response))
+
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
 
