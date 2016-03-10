@@ -18,18 +18,29 @@ def update_container(name, cpuset_arr, mem_units):
     raise Exception(ex.output)
 
 def get_allocation():
-  containers = ['rubis-jboss', 'pwitter-web']
+  containers = []
+  cmd = 'docker ps -q'
+  try:
+    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+    logging.info(cmd)
+    for line in output.split('\n'):
+      if line:
+        containers.append(line)
+  except subprocess.CalledProcessError, ex: # error code <> 0 
+    print ex.output
+    raise Exception(ex.output) 
   result = {}
-  for container in containers:
-    cmd = 'docker inspect ' + container
+  for container_id in containers:
+    cmd = 'docker inspect ' + container_id
     try:
       output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
       logging.info(cmd)
       info = json.loads(output)
+      name = info[0]['Name']
       cpuset = info[0]['HostConfig']['CpusetCpus']
       mem = info[0]['HostConfig']['Memory']
       mem_units = int(mem / (1024 * 1024 * 512))
-      result[container] = {
+      result[name] = {
         'CpusetCpus': cpuset,
         'Memory': mem,
         'MemUnits': mem_units
