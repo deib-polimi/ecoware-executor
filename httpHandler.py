@@ -4,68 +4,16 @@ logging.basicConfig(level=logging.DEBUG)
 
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from SocketServer import ThreadingMixIn
-import BaseHTTPServer
-import threading
 import json
 import time
 import sys
 import traceback
-import mimetypes
-import posixpath
-import urllib
-import os
-import shutil
 import copy
-from sets import Set
 from sys import argv
 
-import docker
-
-CPU_NUMBER = 8
-
-used_cpus = Set()
-
-topology = {}
-
-def get_cpuset(cpu_cores):
-  cpuset = []
-  if CPU_NUMBER - len(used_cpus) < cpu_cores:
-    raise Exception('Not enough CPU_CORES')
-  for i in range(0, CPU_NUMBER):
-    if not i in used_cpus:
-      used_cpus.add(i)
-      cpuset.append(i)
-      if len(cpuset) == cpu_cores:
-        return cpuset
-  return cpuset
-
-def release_cpuset(cpuset_arr):
-  for i in cpuset_arr:
-    used_cpus.discard(i)
+import topology
 
 class HttpHandler(BaseHTTPRequestHandler):
-
-  def execute(self, plan):
-    for tier in plan:
-      if tier in topology:
-        cpuset = topology[tier]['cpuset']
-        release_cpuset(cpuset)
-
-    for tier in plan:
-      cpu_cores = plan[tier]['cpu_cores']
-      mem_units = plan[tier]['mem_units']
-
-      if not tier in topology:
-        topology[tier] = {}
-
-      topology[tier]['cpu_cores'] = cpu_cores
-      topology[tier]['mem_units'] = mem_units
-
-      cpuset = get_cpuset(cpu_cores)
-      topology[tier]['cpuset'] = cpuset
-
-      print tier, cpu_cores, cpuset, mem_units
-      docker.update_container(tier, cpuset, mem_units)
 
   def do_GET(self):
     if self.path.startswith('/api/'):
@@ -73,11 +21,12 @@ class HttpHandler(BaseHTTPRequestHandler):
       response = {}
       try:
         if self.path.startswith('/api/allocation'):
-          response = copy.deepcopy(topology)
+          allocation = topology.get_allocation()
+          response = copy.deepcopy(allocation)
         elif self.path.startswith('/api/inspect'):
-          response = docker.get_allocation()
-
-        print 'response time {0:.2f}'.format(time.time() - start)
+          response = topology.inspect()
+        elif self.path.startswith('/api/topology'):
+          response = topology.get_topology()
       except Exception as e: 
         response = {}
         response['error'] = repr(e)
@@ -89,25 +38,48 @@ class HttpHandler(BaseHTTPRequestHandler):
       self.wfile.write(json.dumps(response))
     return
 
-  def do_POST(self):
+  def do_PUT(self):
     start = time.time()
-    if self.path.startswith('/api/executor'):
-      try:
-        post_data_string = self.rfile.read(int(self.headers['Content-Length']))
-        plan = json.loads(post_data_string)
-
-        self.execute(plan)
-
+    try:
+      post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+      data = json.loads(post_data_string)
+      if self.path.startswith('/api/topology'):
+        topology.set_topology(data)
         response = {}
-      except Exception as e: 
+      elif self.path.startswith('/api/containers'):
+        topology.update_containers(data)
         response = {}
-        response['error'] = repr(e)
-        traceback.print_exc(file=sys.stdout)
+    except Exception as e: 
+      response = {}
+      response['error'] = repr(e)
+      traceback.print_exc(file=sys.stdout)
     response['time'] = '{0:.2f}'.format(time.time() - start)
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
     self.end_headers()
-    print response
+    logging.debug(response)
+    self.wfile.write(json.dumps(response))
+
+  def do_POST(self):
+    start = time.time()
+    try:
+      post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+      data = json.loads(post_data_string)
+      if self.path.startswith('/api/topology'):
+        topology.set_topology(data)
+        response = {}
+      elif self.path.startswith('/api/containers'):
+        topology.update_containers(data)
+        response = {}
+    except Exception as e: 
+      response = {}
+      response['error'] = repr(e)
+      traceback.print_exc(file=sys.stdout)
+    response['time'] = '{0:.2f}'.format(time.time() - start)
+    self.send_response(200)
+    self.send_header('Content-type', 'application/json')
+    self.end_headers()
+    loggign.debug(response)
     self.wfile.write(json.dumps(response))
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
