@@ -16,8 +16,8 @@ import topology
 class HttpHandler(BaseHTTPRequestHandler):
 
   def do_GET(self):
+    start = time.time()
     if self.path.startswith('/api/'):
-      start = time.time()
       response = {}
       try:
         if self.path.startswith('/api/allocation'):
@@ -27,6 +27,9 @@ class HttpHandler(BaseHTTPRequestHandler):
           response = topology.inspect()
         elif self.path.startswith('/api/topology'):
           response = topology.get_topology()
+        else:
+          self.send_error(404)
+          return
       except Exception as e: 
         response = {}
         response['error'] = repr(e)
@@ -42,6 +45,7 @@ class HttpHandler(BaseHTTPRequestHandler):
     start = time.time()
     try:
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+      logging.debug('POST data ' + post_data_string)
       data = json.loads(post_data_string)
       if self.path.startswith('/api/topology'):
         topology.set_topology(data)
@@ -49,6 +53,9 @@ class HttpHandler(BaseHTTPRequestHandler):
       elif self.path.startswith('/api/containers'):
         topology.update_containers(data)
         response = {}
+      else:
+        self.send_error(404)
+        return
     except Exception as e: 
       response = {}
       response['error'] = repr(e)
@@ -64,13 +71,17 @@ class HttpHandler(BaseHTTPRequestHandler):
     start = time.time()
     try:
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
+      logging.debug('POST data ' + post_data_string)
       data = json.loads(post_data_string)
-      if self.path.startswith('/api/topology'):
-        topology.set_topology(data)
+      if self.path.startswith('/api/container/new'):
+        topology.create_container(data)
         response = {}
       elif self.path.startswith('/api/containers'):
         topology.update_containers(data)
         response = {}
+      else:
+        send_error(404)
+        return
     except Exception as e: 
       response = {}
       response['error'] = repr(e)
@@ -79,7 +90,6 @@ class HttpHandler(BaseHTTPRequestHandler):
     self.send_response(200)
     self.send_header('Content-type', 'application/json')
     self.end_headers()
-    loggign.debug(response)
     self.wfile.write(json.dumps(response))
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):

@@ -17,6 +17,19 @@ def update_container(name, cpuset_arr, mem_units):
     print ex.output
     raise Exception(ex.output)
 
+def run_container(name, image, cpuset_arr, mem_units, docker_params, entrypoint_params):
+  logging.debug('run container')
+  cpuset = ','.join(map(str, cpuset_arr))
+  mem_mb = mem_units * 512
+  cmd = 'docker run -itd {} --cpuset-cpus={} -m={}m --name={} -v=/vagrant:/vagrant {} {}'.format(docker_params, cpuset, mem_mb, name, image, entrypoint_params)
+  try:
+    subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+    logging.info(cmd)
+    return cmd
+  except subprocess.CalledProcessError, ex: # error code <> 0 
+    print ex.output
+    raise Exception(ex.output)
+
 def inspect():
   containers = []
   cmd = 'docker ps -q'
