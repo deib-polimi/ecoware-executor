@@ -6,39 +6,47 @@ API for managing docker containers
   [GET]    /api/inspect
   [GET]    /api/topology
   [PUT]    /api/topology
-  [POST]   /api/container/new
-  [PUT]    /api/containers
-  [DELETE] /api/container/${container_name}
+  [PUT]    /api/translate
+  [PUT]    /api/execute
 ```
 ## API Description
 ### [PUT] /api/topology
 Example of input payload:
 ```
 {
-  "cpu_cores": 8
+  "cpu_cores": 8,
+  "mem_units": 32,
+  "tiers": [
+    {
+      "name": "pwitter-web",
+      "image": "pwitter-web",
+      "docker_params": "-p 8080:5000 --add-host=\"db:172.31.31.123\"",
+      "entrypoint_params": "-w 3 -k eventlet"
+    }, {
+      "name": "rubis-jboss",
+      "image": "polimi/rubis-jboss:nosensors",
+      "docker_params": "-p 80:8080 --add-host=\"db:172.31.31.123\"",
+      "entrypoint_params": " /opt/jboss-4.2.2.GA/bin/run.sh --host=0.0.0.0 --bootdir=/opt/rubis/rubis-cvs-2008-02-25/Servlets_Hibernate -c default"
+    }
+  ]
 }
-```
-Knowing of VM cpu_cores needed to manage "cpuset" array correctly for each docker container.
-### [POST] /api/container/new
-Method for creating new container. Payload is
-```
-{
-  "name": "pwitter-web",
-  "image": "nginx",
-  "cpu_cores": 3,
-  "mem_units": 1,
-  "docker_params": "-p 80:8080 --add-host=\"db:172.31.18.15\"",
-  "entrypoint_params": "/opt/jboss-4.2.2.GA/bin/run.sh --host=0.0.0.0 --bootdir=/opt/"
-}
-```
-`docker_params` and `entrypoint_params` are optional.
-This method runs command
-```
-docker run -itd ${docker_params} --cpuset=${cpuset} -m=${mem_mb} --name=${name} ${image} ${entrypoint_params}
 ```
 
-### [PUT] /api/containers
-Example payload:
+### [PUT] /api/translate
+Translates plan to the list of actions, without executing them. Example payload:
+```
+{
+  "rubis-jboss": {
+    "cpu_cores": 7,
+    "mem_units": 1
+  }, "pwitter-web": {
+    "cpu_cores": 1,
+    "mem_units": 1
+  }
+}
+```
+### [PUT] /api/execute
+Executes the plan by deleting, creating and updating containers. Example payload:
 ```
 {
   "rubis-jboss": {
