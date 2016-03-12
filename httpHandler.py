@@ -17,28 +17,27 @@ class HttpHandler(BaseHTTPRequestHandler):
 
   def do_GET(self):
     start = time.time()
-    if self.path.startswith('/api/'):
+    response = {}
+    try:
+      if self.path.startswith('/api/allocation'):
+        allocation = topology.get_allocation()
+        response = copy.deepcopy(allocation)
+      elif self.path.startswith('/api/inspect'):
+        response = topology.inspect()
+      elif self.path.startswith('/api/topology'):
+        response = topology.get_topology()
+      else:
+        self.send_error(404)
+        return
+    except Exception as e: 
       response = {}
-      try:
-        if self.path.startswith('/api/allocation'):
-          allocation = topology.get_allocation()
-          response = copy.deepcopy(allocation)
-        elif self.path.startswith('/api/inspect'):
-          response = topology.inspect()
-        elif self.path.startswith('/api/topology'):
-          response = topology.get_topology()
-        else:
-          self.send_error(404)
-          return
-      except Exception as e: 
-        response = {}
-        response['error'] = repr(e)
-        traceback.print_exc(file=sys.stdout)
-      response['time'] = '{0:.2f}'.format(time.time() - start)
-      self.send_response(200)
-      self.send_header('Content-type', 'application/json')
-      self.end_headers()
-      self.wfile.write(json.dumps(response))
+      response['error'] = repr(e)
+      traceback.print_exc(file=sys.stdout)
+    response['time'] = '{0:.2f}'.format(time.time() - start)
+    self.send_response(200)
+    self.send_header('Content-type', 'application/json')
+    self.end_headers()
+    self.wfile.write(json.dumps(response))
     return
 
   def do_PUT(self):
