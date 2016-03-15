@@ -16,6 +16,7 @@ Example of input payload:
 {
   "cpu_cores": 8,
   "mem_units": 32,
+  "auto_scaling_group": "monolithic-ex-2cpu",
   "tiers": [
     {
       "name": "pwitter-web",
