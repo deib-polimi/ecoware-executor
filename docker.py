@@ -81,7 +81,7 @@ def run_tier_hooks(name, hooks):
     print ex.output
     raise Exception(ex.output)
 
-def run_scale_hooks(container, hooks):
+def run_scale_hooks(name, hooks):
   try:
     for hook in hooks:
       cmd = 'docker exec {} sh -c "cd /ecoware/hooks/scale_hooks && ./{}"'.format(name, hook)
