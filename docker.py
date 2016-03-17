@@ -19,7 +19,7 @@ def update_container(name, cpuset_arr, mem_units):
 def run_container(name, image, cpuset_arr, mem_units, docker_params, entrypoint_params):
   cpuset = ','.join(map(str, cpuset_arr))
   mem_mb = mem_units * 512
-  cmd = 'docker run -itd {} --cpuset-cpus={} -m={}m --name={} -v=/vagrant:/vagrant {} {}'.format(docker_params, cpuset, mem_mb, name, image, entrypoint_params)
+  cmd = 'docker run -itd {} --cpuset-cpus={} -m={}m --name={} -v=/ecoware:/ecoware {} {}'.format(docker_params, cpuset, mem_mb, name, image, entrypoint_params)
   try:
     subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
     logging.info(cmd)
@@ -70,6 +70,26 @@ def inspect():
       print ex.output
       raise Exception(ex.output) 
   return result
+
+def run_tier_hooks(name, hooks):
+  try:
+    for hook in hooks:
+      cmd = 'docker exec {} sh -c "cd /ecoware/hooks/tier_hooks && ./{}"'.format(name, hook)
+      subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+      logging.info(cmd)
+  except subprocess.CalledProcessError, ex: # error code <> 0 
+    print ex.output
+    raise Exception(ex.output)
+
+def run_scale_hooks(container, hooks):
+  try:
+    for hook in hooks:
+      cmd = 'docker exec {} sh -c "cd /ecoware/hooks/scale_hooks && ./{}"'.format(name, hook)
+      subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+      logging.info(cmd)
+  except subprocess.CalledProcessError, ex: # error code <> 0 
+    print ex.output
+    raise Exception(ex.output)
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG)

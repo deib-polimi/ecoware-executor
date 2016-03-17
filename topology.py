@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import logging
+import subprocess
 from sets import Set
 
 import docker
@@ -39,6 +40,7 @@ def execute(plan):
       release_cpuset(cpuset)
       del allocation[tier]
       docker.remove_container(tier)
+      changed.add(tier)
 
   # Release resources
   for tier in plan:
@@ -75,6 +77,8 @@ def execute(plan):
       endpoint_params = info.get('endpoint_params', '')
       logging.debug('params; {} {} {}'.format(image, docker_params, endpoint_params))
       docker.run_container(tier, image, cpuset, mem_units, docker_params, endpoint_params)
+      if 'scale_hooks' in info:
+        docker.run_scale_hooks(tier, info['scale_hooks'])
     else:
       docker.update_container(tier, cpuset, mem_units)
 
@@ -102,6 +106,24 @@ def translate(plan):
 def set_topology(topology):
   global _topology
   _topology = topology
+  if 'hooks_git' in topology:
+    update_scale_folder(topology['hooks_git'])
+
+def update_scale_folder(git_repo):
+  try:
+    dir_name = '/ecoware'
+    repo_folder = '/ecoware/hooks'
+    if !os.path.isdir(dir_name):
+      os.mkdir(dir_name)
+      os.chdir(dir_name)
+      cmd = 'git clone {} {}'.format(git_repo, repo_folder)
+      subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+    os.chdir(dir_name)
+    cmd = 'git pull'
+    subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+  except subprocess.CalledProcessError, ex: # error code <> 0 
+    print ex.output
+    raise Exception(ex.output)
 
 def get_allocation():
   return _allocation
