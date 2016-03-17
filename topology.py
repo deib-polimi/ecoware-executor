@@ -2,6 +2,7 @@
 
 import logging
 import subprocess
+import os
 from sets import Set
 
 import docker
@@ -113,12 +114,12 @@ def update_scale_folder(git_repo):
   try:
     dir_name = '/ecoware'
     repo_folder = '/ecoware/hooks'
-    if !os.path.isdir(dir_name):
+    if not os.path.isdir(dir_name):
       os.mkdir(dir_name)
       os.chdir(dir_name)
       cmd = 'git clone {} {}'.format(git_repo, repo_folder)
       subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
-    os.chdir(dir_name)
+    os.chdir(repo_folder)
     cmd = 'git pull'
     subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
   except subprocess.CalledProcessError, ex: # error code <> 0 
