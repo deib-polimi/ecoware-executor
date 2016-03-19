@@ -40,12 +40,35 @@ class HttpHandler(BaseHTTPRequestHandler):
     self.wfile.write(json.dumps(response))
     return
 
-  def do_PUT(self):
+  def do_POST(self):
     start = time.time()
     try:
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
       logging.debug('POST data ' + post_data_string)
       data = json.loads(post_data_string)
+      if self.path.startswith('/api/run/tier_hooks'):
+        topology.run_tier_hooks(data)
+        response = {}
+      else:
+        self.send_error(404)
+        return
+    except Exception as e: 
+      response = {}
+      response['error'] = repr(e)
+      traceback.print_exc(file=sys.stdout)
+    response['time'] = '{0:.2f}'.format(time.time() - start)
+    self.send_response(200)
+    self.send_header('Content-type', 'application/json')
+    self.end_headers()
+    logging.debug(response)
+    self.wfile.write(json.dumps(response))
+
+  def do_PUT(self):
+    start = time.time()
+    try:
+      data_string = self.rfile.read(int(self.headers['Content-Length']))
+      logging.debug('PUT data ' + data_string)
+      data = json.loads(data_string)
       if self.path.startswith('/api/topology'):
         topology.set_topology(data)
         response = {}

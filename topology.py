@@ -66,13 +66,7 @@ def execute(plan):
 
     logging.debug('{} container; {} {} {} {}'.format(action, tier, cpu_cores, cpuset, mem_units))
     if action == 'create':
-      info = None
-      for tier_info in topology['tiers']:
-        if tier_info['name'] == tier:
-          info = tier_info
-          break
-      if not info:
-        raise Exception('Unknown tier ' + tier)
+      info = get_tier_info(tier)
       image = info['image']
       docker_params = info.get('docker_params', '')
       endpoint_params = info.get('endpoint_params', '')
@@ -82,6 +76,13 @@ def execute(plan):
         docker.run_scale_hooks(tier, info['scale_hooks'])
     else:
       docker.update_container(tier, cpuset, mem_units)
+
+def get_tier_info(tier):
+  topology = _topology
+  for tier_info in topology['tiers']:
+    if tier_info['name'] == tier:
+      return tier_info
+  raise Exception('Unknown tier ' + tier)
 
 def translate(plan):
   allocation = _allocation
@@ -134,3 +135,10 @@ def inspect():
 
 def get_topology():
   return _topology
+
+def run_tier_hooks(tiers):
+  for tier_name in tiers:
+    if tier_name in _allocation:
+      info = get_tier_info(tier_name)
+      if 'tier_hooks' in info:
+        docker.run_tier_hooks(tier_name, info['tier_hooks'])
