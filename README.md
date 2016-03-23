@@ -16,7 +16,7 @@ Example of input payload:
 ```
 {
   "cpu_cores": 8,
-  "mem_units": 32,
+  "mem_units": 64,
   "auto_scaling_group": "monolithic-ex-8cpu",
   "hooks_git": "https://github.com/n43jl/hooks",
   "tiers": [
