@@ -41,7 +41,6 @@ def execute(plan):
       release_cpuset(cpuset)
       del allocation[tier]
       docker.remove_container(tier)
-      changed.add(tier)
 
   # Release resources
   for tier in plan:
