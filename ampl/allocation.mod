@@ -38,8 +38,6 @@ param not_use_tier_weight{Tier, VM};
 param not_use_vm_weight{VM};
 
 # VARS
-var tier_changed{Tier, VM} >= 0 binary;
-
 var tier_usage{Tier, VM} >= 0 binary;
 var vm_usage{VM} >= 0 binary;
 # opposite to tier_usage
@@ -55,7 +53,7 @@ var mem{Tier, VM} >= 0 integer;
 
 # OBJECTIVE FUNCTION
 minimize cost:
-  sum{i in Tier, j in VM} (use_tier_weight[i, j] * tier_usage[i, j] - use_tier_weight[i, j] * tier_changed[i, j] + not_use_tier_weight[i, j] * tier_idle[i, j]) + sum{j in VM} (use_vm_weight[j] * vm_usage[j] + not_use_vm_weight[j] * vm_idle[j]);
+  sum{i in Tier, j in VM} (use_tier_weight[i, j] * tier_usage[i, j] + not_use_tier_weight[i, j] * tier_idle[i, j]) + sum{j in VM} (use_vm_weight[j] * vm_usage[j] + not_use_vm_weight[j] * vm_idle[j]);
 
 
 # CONSTRAINTS
