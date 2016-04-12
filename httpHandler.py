@@ -80,6 +80,12 @@ class HttpHandler(BaseHTTPRequestHandler):
         response = {
           'actions': actions
         }
+      elif self.path.startswith('/api/cpuset/release'):
+        topology.release_all()
+        response = {}
+      elif self.path.startswith('/api/docker/run'):
+        topology.run(data)
+        response = {}
       else:
         self.send_error(404)
         return

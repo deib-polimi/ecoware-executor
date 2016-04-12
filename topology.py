@@ -30,6 +30,29 @@ def release_cpuset(cpuset_arr):
   for i in cpuset_arr:
     used_cpus.discard(i)
 
+def release_all():
+  _used_cpus.clear()
+
+def run(data):
+  allocation = _allocation
+  topology = _topology
+
+  action = 'create'
+  tier = data['name']
+
+  allocation[tier] = {}
+  cpu_cores = data['cpu_cores']
+  mem_units = data['mem_units']
+
+  info = get_tier_info(tier)
+  image = info['image']
+  docker_params = info.get('docker_params', '')
+  endpoint_params = info.get('endpoint_params', '')
+  logging.debug('params; {} {} {}'.format(image, docker_params, endpoint_params))
+  docker.run_container(tier, image, cpuset, mem_units, docker_params, endpoint_params)
+  if 'scale_hooks' in info:
+    docker.run_scale_hooks(tier, info['scale_hooks'])
+
 def execute(plan):
   allocation = _allocation
   topology = _topology
