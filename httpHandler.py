@@ -89,6 +89,32 @@ class HttpHandler(BaseHTTPRequestHandler):
       elif self.path.startswith('/api/docker/run'):
         topology.run(data)
         response = {}
+      elif self.path.startswith('/api/docker/update'):
+        topology.update(data)
+        response = {}
+      else:
+        self.send_error(404)
+        return
+    except Exception as e: 
+      response = {}
+      response['error'] = repr(e)
+      traceback.print_exc(file=sys.stdout)
+    response['time'] = '{0:.2f}'.format(time.time() - start)
+    self.send_response(200)
+    self.send_header('Content-type', 'application/json')
+    self.end_headers()
+    logging.debug(response)
+    self.wfile.write(json.dumps(response))
+
+  def do_DELETE(self):
+    start = time.time()
+    try:
+      data_string = self.rfile.read(int(self.headers['Content-Length']))
+      logging.debug('DELETE data ' + data_string)
+      data = json.loads(data_string)
+      if self.path.startswith('/api/docker'):
+        topology.remove(data)
+        response = {}
       else:
         self.send_error(404)
         return

@@ -28,17 +28,19 @@ def get_cpuset(cpu_cores):
 def release_all():
   _used_cpus.clear()
 
-def _run_update(data):
+def _allocate(data):
   allocation = _allocation
   tier = data['name']
+  cpu_cores = data['cpu_cores']
   allocation[tier] = {}
   allocation[tier]['cpu_cores'] = data['cpu_cores']
   allocation[tier]['mem_units'] = data['mem_units']
   cpuset = get_cpuset(cpu_cores)
   allocation[tier]['cpuset'] = cpuset
+  return cpuset
 
 def run(data):
-  _run_update(data)
+  cpuset = _allocate(data)
 
   tier = data['name']
   cpu_cores = data['cpu_cores']
@@ -54,7 +56,7 @@ def run(data):
     docker.run_scale_hooks(tier, info['scale_hooks'])
 
 def update(data):
-  _run_update(data)
+  cpuset = _allocate(data)
 
   tier = data['name']
   cpu_cores = data['cpu_cores']
@@ -71,7 +73,8 @@ def remove(data):
 
   if tier in allocation:
     del allocation[tier]
-    docker.remove_container(tier)
+
+  docker.remove_container(tier)
 
 def execute(plan):
   allocation = _allocation
