@@ -25,32 +25,24 @@ def get_cpuset(cpu_cores):
         return cpuset
   return cpuset
 
-def release_cpuset(cpuset_arr):
-  used_cpus = _used_cpus
-  for i in cpuset_arr:
-    used_cpus.discard(i)
-
 def release_all():
   _used_cpus.clear()
 
-def run(data):
+def _run_update(data):
   allocation = _allocation
-  topology = _topology
-
-  action = 'create'
   tier = data['name']
-
   allocation[tier] = {}
-  cpu_cores = data['cpu_cores']
-  mem_units = data['mem_units']
-
-  allocation[tier]['cpu_cores'] = cpu_cores
-  allocation[tier]['mem_units'] = mem_units
-
+  allocation[tier]['cpu_cores'] = data['cpu_cores']
+  allocation[tier]['mem_units'] = data['mem_units']
   cpuset = get_cpuset(cpu_cores)
   allocation[tier]['cpuset'] = cpuset
 
-  logging.debug('{} container; {} {} {} {}'.format(action, tier, cpu_cores, cpuset, mem_units))
+def run(data):
+  _run_update(data)
+
+  tier = data['name']
+  cpu_cores = data['cpu_cores']
+  mem_units = data['mem_units']
 
   info = get_tier_info(tier)
   image = info['image']
@@ -60,6 +52,26 @@ def run(data):
   docker.run_container(tier, image, cpuset, mem_units, docker_params, endpoint_params)
   if 'scale_hooks' in info:
     docker.run_scale_hooks(tier, info['scale_hooks'])
+
+def update(data):
+  _run_update(data)
+
+  tier = data['name']
+  cpu_cores = data['cpu_cores']
+  mem_units = data['mem_units']
+
+  docker.update_container(tier, cpuset, mem_units)
+  info = get_tier_info(tier)
+  if 'scale_hooks' in info:
+    docker.run_scale_hooks(tier, info['scale_hooks'])
+
+def remove(data):
+  allocation = _allocation
+  tier = data['name']
+
+  if tier in allocation:
+    del allocation[tier]
+    docker.remove_container(tier)
 
 def execute(plan):
   allocation = _allocation
