@@ -44,6 +44,14 @@ def run(data):
   cpu_cores = data['cpu_cores']
   mem_units = data['mem_units']
 
+  allocation[tier]['cpu_cores'] = cpu_cores
+  allocation[tier]['mem_units'] = mem_units
+
+  cpuset = get_cpuset(cpu_cores)
+  allocation[tier]['cpuset'] = cpuset
+
+  logging.debug('{} container; {} {} {} {}'.format(action, tier, cpu_cores, cpuset, mem_units))
+
   info = get_tier_info(tier)
   image = info['image']
   docker_params = info.get('docker_params', '')

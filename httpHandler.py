@@ -66,9 +66,12 @@ class HttpHandler(BaseHTTPRequestHandler):
   def do_PUT(self):
     start = time.time()
     try:
-      data_string = self.rfile.read(int(self.headers['Content-Length']))
-      logging.debug('PUT data ' + data_string)
-      data = json.loads(data_string)
+      if 'Content-Length' in self.headers:
+        data_string = self.rfile.read(int(self.headers['Content-Length']))
+        logging.debug('PUT data ' + data_string)
+        data = json.loads(data_string)
+      else:
+        data = {}
       if self.path.startswith('/api/topology'):
         topology.set_topology(data)
         response = {}
