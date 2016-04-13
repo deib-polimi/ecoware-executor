@@ -66,12 +66,9 @@ class HttpHandler(BaseHTTPRequestHandler):
   def do_PUT(self):
     start = time.time()
     try:
-      if 'Content-Length' in self.headers:
-        data_string = self.rfile.read(int(self.headers['Content-Length']))
-        logging.debug('PUT data ' + data_string)
-        data = json.loads(data_string)
-      else:
-        data = {}
+      data_string = self.rfile.read(int(self.headers['Content-Length']))
+      logging.debug('PUT data ' + data_string)
+      data = json.loads(data_string)
       if self.path.startswith('/api/topology'):
         topology.set_topology(data)
         response = {}
@@ -84,7 +81,7 @@ class HttpHandler(BaseHTTPRequestHandler):
           'actions': actions
         }
       elif self.path.startswith('/api/cpuset/release'):
-        topology.release_all()
+        topology.release_cpuset_by_tiers(data)
         response = {}
       elif self.path.startswith('/api/docker/run'):
         topology.run(data)

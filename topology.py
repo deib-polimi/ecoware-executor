@@ -25,8 +25,17 @@ def get_cpuset(cpu_cores):
         return cpuset
   return cpuset
 
-def release_all():
-  _used_cpus.clear()
+def release_cpuset(cpuset_arr):
+  used_cpus = _used_cpus
+  for i in cpuset_arr:
+    used_cpus.discard(i)
+
+def release_cpuset_by_tiers(tiers):
+  allocation = _allocation
+  for tier in tiers:
+    if tier in allocation:
+      cpuset_arr = allocation[tier]['cpuset']
+      release_cpuset(cpuset_arr)
 
 def _allocate(data):
   allocation = _allocation
