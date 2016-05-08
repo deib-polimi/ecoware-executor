@@ -9,13 +9,15 @@ import docker
 
 _used_cpus = Set()
 _allocation = {}
-_topology = {'cpu_cores': 0, 'mem_units': 0}
+_topology = {"infrastructure" : {"cpu_cores": 0, "mem_units": 0}}
+_tiers = {}
 
 def get_cpuset(cpu_cores):
   used_cpus = _used_cpus
   cpuset = []
-  vm_cpu_cores = _topology['cpu_cores']
+  vm_cpu_cores = _topology['infrastructure']['cpu_cores']
   if vm_cpu_cores - len(used_cpus) < cpu_cores:
+    logging.error('vm_cpu_cores={}; used_cpus={}; "cpu_cores={}; allocation={}'.format(vm_cpu_cores, used_cpus, cpu_cores, _allocation))
     raise Exception('Not enough CPU cores')
   for i in range(0, vm_cpu_cores):
     if not i in used_cpus:
@@ -54,13 +56,16 @@ def run(data):
   tier = data['name']
   cpu_cores = data['cpu_cores']
   mem_units = data['mem_units']
+  host = data.get('host', '')
 
   info = get_tier_info(tier)
-  image = info['image']
-  docker_params = info.get('docker_params', '')
-  endpoint_params = info.get('endpoint_params', '')
-  logging.debug('params; {} {} {}'.format(image, docker_params, endpoint_params))
-  docker.run_container(tier, image, cpuset, mem_units, docker_params, endpoint_params)
+  image = info['docker_image']
+  entrypoint_params = info.get('entrypoint_params', '')
+  logging.debug('params; {} {} {}'.format(image, host, entrypoint_params))
+  docker_params = ''
+  if host:
+    docker_params = ' --add-host "{}"'.format(host)
+  docker.run_container(tier, image, cpuset, mem_units, docker_params, entrypoint_params)
   if 'scale_hooks' in info:
     docker.run_scale_hooks(tier, info['scale_hooks'])
 
@@ -87,7 +92,6 @@ def remove(data):
 
 def execute(plan):
   allocation = _allocation
-  topology = _topology
 
   # DELETE
   for tier in allocation:
@@ -121,26 +125,23 @@ def execute(plan):
     logging.debug('{} container; {} {} {} {}'.format(action, tier, cpu_cores, cpuset, mem_units))
     if action == 'create':
       info = get_tier_info(tier)
-      image = info['image']
-      docker_params = info.get('docker_params', '')
-      endpoint_params = info.get('endpoint_params', '')
-      logging.debug('params; {} {} {}'.format(image, docker_params, endpoint_params))
-      docker.run_container(tier, image, cpuset, mem_units, docker_params, endpoint_params)
+      image = info['docker_image']
+      entrypoint_params = info.get('entrypoint_params', '')
+      logging.debug('params; {} {}'.format(image, entrypoint_params))
+      docker.run_container(tier, image, cpuset, mem_units, entrypoint_params)
       if 'scale_hooks' in info:
         docker.run_scale_hooks(tier, info['scale_hooks'])
     else:
       docker.update_container(tier, cpuset, mem_units)
 
 def get_tier_info(tier):
-  topology = _topology
-  for tier_info in topology['tiers']:
-    if tier_info['name'] == tier:
-      return tier_info
+  for tier_name in _tiers:
+    if tier_name == tier:
+      return _tiers[tier_name]
   raise Exception('Unknown tier ' + tier)
 
 def translate(plan):
   allocation = _allocation
-  topology = _topology
 
   actions = []
   # DELETE
@@ -160,12 +161,19 @@ def translate(plan):
   return actions
 
 def set_topology(topology):
-  global _topology
+  global _topology, _tiers
   _topology = topology
-  if 'hooks_git' in topology:
-    update_scale_folder(topology['hooks_git'])
+  if 'hooks_git_repo' in topology['infrastructure']:
+    update_scale_folder(topology['infrastructure']['hooks_git_repo'])
+  _tiers = {}
+  tiers = _tiers
+  for app_json in topology['apps']:
+    for tier_name in app_json['tiers']:
+      flat_name = '{}_{}'.format(app_json['name'], tier_name)
+      tiers[flat_name] = app_json['tiers'][tier_name]
 
 def update_scale_folder(git_repo):
+  logging.debug('git repo' + git_repo)
   try:
     dir_name = '/ecoware'
     repo_folder = '/ecoware/hooks'
