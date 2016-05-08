@@ -1,0 +1,6 @@
+{
+	"name": "rubis_db",
+	"host": "db:127.0.0.1",
+	"cpu_cores": 1,
+	"mem_units": 1
+}

@@ -1,0 +1,10 @@
+{
+	"rubis_loadbalancer": {
+		"cpu_cores": 1,
+		"mem_units": 1
+	},
+	"pwitter_app_server": {
+		"cpu_cores": 1,
+		"mem_units": 1
+	}
+}

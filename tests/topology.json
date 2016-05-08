@@ -1,0 +1,58 @@
+{
+	"infrastructure": {
+		"cloud_driver": {
+			"autoscaling_groupname": "monolithic_ex_8",
+			"credentials": "/ecoware/credentials.conf"
+		},
+		"max_vms": 10,
+		"hooks_git_repo": "https://github.com/n43jl/hooks",
+		"cpu_cores": 2,
+		"mem_units": 8
+	},
+	"apps": [{
+		"name": "rubis",
+		"tiers": {
+			"loadbalancer": {
+				"name": "Front LoadBalancer",
+				"max_node": 1,
+				"docker_image": "nginx",
+				"depends_on": ["app_server"],
+				"on_dependency_scale": "reload_server_pool.sh",
+				"max_rt": 0.1
+			}, "app_server": {
+				"name": "Application Logic Tier",
+				"docker_image": "hello-world",
+				"depends_on": ["db"],
+				"on_node_scale": "jboss_hook.sh",
+				"on_dependency_scale": "reload_connections.sh",
+				"ports": ["80:8080"],
+				"entrypoint_params": "-w 3 -k eventlet"
+			}, "db": {
+				"name": "Data Tier",
+				"max_node": 1,
+				"docker_image": "nginx",
+				"on_node_scale": "mysql_hook.sh",
+				"max_rt": 0.2,
+				"ports": ["3306:3306"]
+			}
+
+		}
+	}, {
+		"name": "pwitter",
+		"tiers": {
+			"app_server": {
+				"name": "Application Logic Tier",
+				"docker_image": "nginx",
+				"ports": ["8080:5000"],
+				"entrypoint_params": "/opt/jboss-4.2.2.GA/bin/run.sh --host=0.0.0.0 --bootdir=/opt/rubis/rubis-cvs-2008-02-25/ServletHibernate-cdefault"
+			}, "db": {
+				"name": "Data Tier",
+				"max_node": 1,
+				"docker_image": "hello-world",
+				"on_node_scale": "mysql_hook.sh",
+				"max_rt": 0.2,
+				"ports": ["3307:3306"]
+			}
+		}
+	}]
+}
