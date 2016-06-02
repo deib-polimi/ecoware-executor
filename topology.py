@@ -61,7 +61,7 @@ def run(data):
   info = get_tier_info(tier)
   image = info['docker_image']
   entrypoint_params = info.get('entrypoint_params', '')
-  logging.debug('params; {} {} {}'.format(image, host, entrypoint_params))
+  logging.debug('params; {} {} {}'.format(image, hosts, entrypoint_params))
   docker_params = ''
   for host in hosts:
     docker_params += ' --add-host "{}"'.format(host)
