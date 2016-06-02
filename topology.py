@@ -61,10 +61,15 @@ def run(data):
   info = get_tier_info(tier)
   image = info['docker_image']
   entrypoint_params = info.get('entrypoint_params', '')
-  logging.debug('params; {} {} {}'.format(image, hosts, entrypoint_params))
+  ports = info.get('ports', [])
+  logging.debug('params: image={} hosts={} entrpoing_params={} ports={}'.format(image, hosts, entrypoint_params, ports))
   docker_params = ''
   for host in hosts:
     docker_params += ' --add-host "{}"'.format(host)
+
+  for port in ports:
+    docker_params += ' -p {}'.format(port)
+
   docker.run_container(tier, image, cpuset, mem_units, docker_params, entrypoint_params)
   if 'scale_hooks' in info:
     docker.run_scale_hooks(tier, info['scale_hooks'])
