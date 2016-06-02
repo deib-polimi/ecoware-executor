@@ -56,15 +56,15 @@ def run(data):
   tier = data['name']
   cpu_cores = data['cpu_cores']
   mem_units = data['mem_units']
-  host = data.get('host', '')
+  hosts = data.get('hosts', [])
 
   info = get_tier_info(tier)
   image = info['docker_image']
   entrypoint_params = info.get('entrypoint_params', '')
   logging.debug('params; {} {} {}'.format(image, host, entrypoint_params))
   docker_params = ''
-  if host:
-    docker_params = ' --add-host "{}"'.format(host)
+  for host in hosts:
+    docker_params += ' --add-host "{}"'.format(host)
   docker.run_container(tier, image, cpuset, mem_units, docker_params, entrypoint_params)
   if 'scale_hooks' in info:
     docker.run_scale_hooks(tier, info['scale_hooks'])
