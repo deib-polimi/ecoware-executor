@@ -205,5 +205,5 @@ def get_topology():
 
 def run_tier_hooks(tier_name, arg1, arg2):
   info = get_tier_info(tier_name)
-  if 'tier_hooks' in info:
-    docker.run_tier_hooks(tier_name, info['tier_hooks'])
+  if 'on_dependency_scale' in info:
+    docker.run_tier_hooks(tier_name, info['on_dependency_scale'])
