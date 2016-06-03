@@ -46,8 +46,11 @@ class HttpHandler(BaseHTTPRequestHandler):
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
       logging.debug('POST data ' + post_data_string)
       data = json.loads(post_data_string)
-      if self.path.startswith('/api/run/tier_hooks'):
-        topology.run_tier_hooks(data)
+      if self.path.startswith('/api/run/tier_hook'):
+        tier = data['tier']
+        old_allocation = json.dumps(data['old_allocation'])
+        new_allocation = json.dumps(data['new_allocation'])
+        topology.run_tier_hooks(tier, old_allocation, new_allocation)
         response = {}
       else:
         self.send_error(404)

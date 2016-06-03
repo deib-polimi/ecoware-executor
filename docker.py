@@ -71,12 +71,11 @@ def inspect():
       raise Exception(ex.output) 
   return result
 
-def run_tier_hooks(name, hooks):
+def run_tier_hooks(name, hook, arg1, arg2):
   try:
-    for hook in hooks:
-      cmd = 'docker exec {} sh -c "cd /ecoware/hooks/tier_hooks && ./{}"'.format(name, hook)
-      subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
-      logging.info(cmd)
+    cmd = 'docker exec {} sh -c "cd /ecoware/hooks/tier_hooks && ./{} {} {}"'.format(name, hook, arg1, arg2)
+    subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+    logging.info(cmd)
   except subprocess.CalledProcessError, ex: # error code <> 0 
     print ex.output
     raise Exception(ex.output)
