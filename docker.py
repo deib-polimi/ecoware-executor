@@ -73,7 +73,7 @@ def inspect():
 
 def run_tier_hooks(name, hook, arg1, arg2):
   try:
-    cmd = 'docker exec {} sh -c "cd /ecoware/hooks/tier_hooks && ./{} {} {}"'.format(name, hook, arg1, arg2)
+    cmd = 'docker exec {} sh -c \'cd /ecoware/hooks/tier_hooks && ./{} "{}" "{}"\''.format(name, hook, arg1, arg2)
     subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
     logging.info(cmd)
   except subprocess.CalledProcessError, ex: # error code <> 0 
