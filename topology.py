@@ -3,6 +3,7 @@
 import logging
 import subprocess
 import os
+import threading
 from sets import Set
 
 import docker
@@ -11,6 +12,7 @@ _used_cpus = Set()
 _allocation = {}
 _topology = {"infrastructure" : {"cpu_cores": 0, "mem_units": 0}}
 _tiers = {}
+lock = threading.RLock()
 
 def get_cpuset(cpu_cores):
   used_cpus = _used_cpus
@@ -28,16 +30,18 @@ def get_cpuset(cpu_cores):
   return cpuset
 
 def release_cpuset(cpuset_arr):
-  used_cpus = _used_cpus
-  for i in cpuset_arr:
-    used_cpus.discard(i)
+  with lock:
+    used_cpus = _used_cpus
+    for i in cpuset_arr:
+      used_cpus.discard(i)
 
 def release_cpuset_by_tiers(tiers):
-  allocation = _allocation
-  for tier in tiers:
-    if tier in allocation:
-      cpuset_arr = allocation[tier]['cpuset']
-      release_cpuset(cpuset_arr)
+  with lock:
+    allocation = _allocation
+    for tier in tiers:
+      if tier in allocation:
+        cpuset_arr = allocation[tier]['cpuset']
+        release_cpuset(cpuset_arr)
 
 def _allocate(data):
   allocation = _allocation
@@ -51,93 +55,97 @@ def _allocate(data):
   return cpuset
 
 def run(data):
-  cpuset = _allocate(data)
+  with lock:
+    cpuset = _allocate(data)
 
-  tier = data['name']
-  cpu_cores = data['cpu_cores']
-  mem_units = data['mem_units']
-  hosts = data.get('hosts', [])
+    tier = data['name']
+    cpu_cores = data['cpu_cores']
+    mem_units = data['mem_units']
+    hosts = data.get('hosts', [])
 
-  info = get_tier_info(tier)
-  image = info['docker_image']
-  entrypoint_params = info.get('entrypoint_params', '')
-  ports = info.get('ports', [])
-  logging.debug('params: image={} hosts={} entrpoing_params={} ports={}'.format(image, hosts, entrypoint_params, ports))
-  docker_params = ''
-  for host in hosts:
-    docker_params += ' --add-host "{}"'.format(host)
+    info = get_tier_info(tier)
+    image = info['docker_image']
+    entrypoint_params = info.get('entrypoint_params', '')
+    ports = info.get('ports', [])
+    logging.debug('params: image={} hosts={} entrpoing_params={} ports={}'.format(image, hosts, entrypoint_params, ports))
+    docker_params = ''
+    for host in hosts:
+      docker_params += ' --add-host "{}"'.format(host)
 
-  for port in ports:
-    docker_params += ' -p {}'.format(port)
+    for port in ports:
+      docker_params += ' -p {}'.format(port)
 
-  docker.run_container(tier, image, cpuset, mem_units, docker_params, entrypoint_params)
-  if 'scale_hooks' in info:
-    docker.run_scale_hooks(tier, info['scale_hooks'])
+    docker.run_container(tier, image, cpuset, mem_units, docker_params, entrypoint_params)
+    if 'scale_hooks' in info:
+      docker.run_scale_hooks(tier, info['scale_hooks'])
 
 def update(data):
-  cpuset = _allocate(data)
+  with lock:
+    cpuset = _allocate(data)
 
-  tier = data['name']
-  cpu_cores = data['cpu_cores']
-  mem_units = data['mem_units']
+    tier = data['name']
+    cpu_cores = data['cpu_cores']
+    mem_units = data['mem_units']
 
-  docker.update_container(tier, cpuset, mem_units)
-  info = get_tier_info(tier)
-  if 'scale_hooks' in info:
-    docker.run_scale_hooks(tier, info['scale_hooks'])
+    docker.update_container(tier, cpuset, mem_units)
+    info = get_tier_info(tier)
+    if 'scale_hooks' in info:
+      docker.run_scale_hooks(tier, info['scale_hooks'])
 
 def remove(data):
-  allocation = _allocation
-  tier = data['name']
+  with lock:
+    allocation = _allocation
+    tier = data['name']
 
-  if tier in allocation:
-    del allocation[tier]
+    if tier in allocation:
+      del allocation[tier]
 
-  docker.remove_container(tier)
+    docker.remove_container(tier)
 
 def execute(plan):
-  allocation = _allocation
+  with lock:
+    allocation = _allocation
 
-  # DELETE
-  for tier in allocation:
-    if not tier in plan:
-      cpuset = allocation[tier]['cpuset']
-      release_cpuset(cpuset)
-      del allocation[tier]
-      docker.remove_container(tier)
+    # DELETE
+    for tier in allocation:
+      if not tier in plan:
+        cpuset = allocation[tier]['cpuset']
+        release_cpuset(cpuset)
+        del allocation[tier]
+        docker.remove_container(tier)
 
-  # Release resources
-  for tier in plan:
-    if tier in allocation:
-      cpuset = allocation[tier]['cpuset']
-      release_cpuset(cpuset)
+    # Release resources
+    for tier in plan:
+      if tier in allocation:
+        cpuset = allocation[tier]['cpuset']
+        release_cpuset(cpuset)
 
-  for tier in plan:
-    cpu_cores = plan[tier]['cpu_cores']
-    mem_units = plan[tier]['mem_units']
+    for tier in plan:
+      cpu_cores = plan[tier]['cpu_cores']
+      mem_units = plan[tier]['mem_units']
 
-    action = 'update'
-    if not tier in allocation:
-      action = 'create'
-      allocation[tier] = {}
+      action = 'update'
+      if not tier in allocation:
+        action = 'create'
+        allocation[tier] = {}
 
-    allocation[tier]['cpu_cores'] = cpu_cores
-    allocation[tier]['mem_units'] = mem_units
+      allocation[tier]['cpu_cores'] = cpu_cores
+      allocation[tier]['mem_units'] = mem_units
 
-    cpuset = get_cpuset(cpu_cores)
-    allocation[tier]['cpuset'] = cpuset
+      cpuset = get_cpuset(cpu_cores)
+      allocation[tier]['cpuset'] = cpuset
 
-    logging.debug('{} container; {} {} {} {}'.format(action, tier, cpu_cores, cpuset, mem_units))
-    if action == 'create':
-      info = get_tier_info(tier)
-      image = info['docker_image']
-      entrypoint_params = info.get('entrypoint_params', '')
-      logging.debug('params; {} {}'.format(image, entrypoint_params))
-      docker.run_container(tier, image, cpuset, mem_units, entrypoint_params)
-      if 'scale_hooks' in info:
-        docker.run_scale_hooks(tier, info['scale_hooks'])
-    else:
-      docker.update_container(tier, cpuset, mem_units)
+      logging.debug('{} container; {} {} {} {}'.format(action, tier, cpu_cores, cpuset, mem_units))
+      if action == 'create':
+        info = get_tier_info(tier)
+        image = info['docker_image']
+        entrypoint_params = info.get('entrypoint_params', '')
+        logging.debug('params; {} {}'.format(image, entrypoint_params))
+        docker.run_container(tier, image, cpuset, mem_units, entrypoint_params)
+        if 'scale_hooks' in info:
+          docker.run_scale_hooks(tier, info['scale_hooks'])
+      else:
+        docker.update_container(tier, cpuset, mem_units)
 
 def get_tier_info(tier):
   for tier_name in _tiers:
@@ -166,16 +174,17 @@ def translate(plan):
   return actions
 
 def set_topology(topology):
-  global _topology, _tiers
-  _topology = topology
-  if 'hooks_git_repo' in topology['infrastructure']:
-    update_scale_folder(topology['infrastructure']['hooks_git_repo'])
-  _tiers = {}
-  tiers = _tiers
-  for app_json in topology['apps']:
-    for tier_name in app_json['tiers']:
-      flat_name = '{}_{}'.format(app_json['name'], tier_name)
-      tiers[flat_name] = app_json['tiers'][tier_name]
+  with lock:
+    global _topology, _tiers
+    _topology = topology
+    if 'hooks_git_repo' in topology['infrastructure']:
+      update_scale_folder(topology['infrastructure']['hooks_git_repo'])
+    _tiers = {}
+    tiers = _tiers
+    for app_json in topology['apps']:
+      for tier_name in app_json['tiers']:
+        flat_name = '{}_{}'.format(app_json['name'], tier_name)
+        tiers[flat_name] = app_json['tiers'][tier_name]
 
 def update_scale_folder(git_repo):
   logging.debug('git repo' + git_repo)
@@ -204,8 +213,9 @@ def get_topology():
   return _topology
 
 def run_tier_hooks(tier_name, arg1, arg2):
-  info = get_tier_info(tier_name)
-  arg1 = arg1.replace('"', '\\"')
-  arg2 = arg2.replace('"', '\\"')
-  if 'on_dependency_scale' in info:
-    docker.run_tier_hooks(tier_name, info['on_dependency_scale'], arg1, arg2)
+  with lock:
+    info = get_tier_info(tier_name)
+    arg1 = arg1.replace('"', '\\"')
+    arg2 = arg2.replace('"', '\\"')
+    if 'on_dependency_scale' in info:
+      docker.run_tier_hooks(tier_name, info['on_dependency_scale'], arg1, arg2)
