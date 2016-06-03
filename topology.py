@@ -203,7 +203,7 @@ def inspect():
 def get_topology():
   return _topology
 
-def run_tier_hooks(tier, arg1, arg2):
+def run_tier_hooks(tier_name, arg1, arg2):
   info = get_tier_info(tier_name)
   if 'tier_hooks' in info:
     docker.run_tier_hooks(tier_name, info['tier_hooks'])
