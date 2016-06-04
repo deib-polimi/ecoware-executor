@@ -1,0 +1,12 @@
+{
+  "vm1": {
+    "jboss": {
+      "cpu_cores": 1,
+      "mem_units": 1
+    },
+    "db": {
+      "cpu_cores": 1,
+      "mem_units": 1
+    }
+  }
+}

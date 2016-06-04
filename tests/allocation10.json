@@ -1,0 +1,10 @@
+{
+  "vm1": {
+    "cpu_cores": 2,
+    "mem_units": 2
+  },
+  "vm2": {
+    "cpu_cores": 2,
+    "mem_units": 2
+  }
+}

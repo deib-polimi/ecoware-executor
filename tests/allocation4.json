@@ -1,0 +1,51 @@
+{
+  "vm4": {
+    "mem_units": 3,
+    "used": {
+      "jboss": {
+        "mem_units": 2,
+        "cpu_cores": 1
+      }
+    },
+    "cpu_cores": 2
+  },
+  "vm5": {
+    "mem_units": 3,
+    "cpu_cores": 2,
+    "used": {}
+  },
+  "vm2": {
+    "mem_units": 3,
+    "used": {
+      "db": {
+        "mem_units": 2,
+        "cpu_cores": 1
+      }
+    },
+    "cpu_cores": 2
+  },
+  "vm3": {
+    "mem_units": 3,
+    "used": {
+      "jboss": {
+        "mem_units": 3,
+        "cpu_cores": 1
+      }
+    },
+    "cpu_cores": 2
+  },
+  "vm1": {
+    "mem_units": 3,
+    "used": {
+      "jboss": {
+        "mem_units": 1,
+        "cpu_cores": 1
+      },
+      "db": {
+        "mem_units": 2,
+        "cpu_cores": 1
+      }
+    },
+    "cpu_cores": 2
+  }
+}
