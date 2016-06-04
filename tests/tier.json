@@ -1,8 +1,0 @@
-{
-  "tier": "rubis_app_server",
-  "old_allocation": {
-    "test": 1,
-    "q": true
-  },
-  "new_allocation": "asdf"
-}
