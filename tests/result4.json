@@ -1,8 +1,0 @@
-[
-  "delete virtual machine 'vm4'", 
-  "delete virtual machine 'vm5'", 
-  "delete virtual machine 'vm2'", 
-  "delete 'jboss' container from 'vm1' virtual machine", 
-  "set 'jboss' container in 'vm3' virtual machine cpu_cores=2.0 and mem=1.0gb", 
-  "set 'db' container in 'vm1' virtual machine cpu_cores=2.0 and mem=1.0gb"
-]

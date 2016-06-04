@@ -1,4 +1,0 @@
-[
-  "set 'db' container in 'vm1' virtual machine cpu_cores=1 and mem=1.0gb", 
-  "create 'jboss' container in 'vm1' virtual machine with cpu_cores=1 and mem=2.5gb"
-]
