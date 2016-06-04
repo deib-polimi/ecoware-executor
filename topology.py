@@ -6,10 +6,14 @@ import time
 import requests
 import json
 import os
+import threading
 from sets import Set
+
+import aws_driver
 
 _allocation = {}
 _topology = {}
+lock = threading.RLock()
 
 def flatten_topology(topology):
   flat = {}
@@ -22,15 +26,16 @@ def flatten_topology(topology):
   return flat
 
 def set_topology(topology):
-  global _topology
-  _topology = topology
-  for vm_name in _allocation:
-    ip_addr = _allocation[vm_name]['ip']
-    url = 'http://{}:8000/api/topology'.format(ip_addr)
-    r = requests.put(url, data=json.dumps(topology), timeout=1)
-    logging.debug('url={}; payload={}; result={}'.format(url, payload, r.text))
-  logging.debug('Set topology is done')
-  set_credentials(topology)
+  with lock:
+    global _topology
+    _topology = topology
+    for vm_name in _allocation:
+      ip_addr = _allocation[vm_name]['ip']
+      url = 'http://{}:8000/api/topology'.format(ip_addr)
+      r = requests.put(url, data=json.dumps(topology), timeout=1)
+      logging.debug('url={}; payload={}; result={}'.format(url, payload, r.text))
+    logging.debug('Set topology is done')
+    set_credentials(topology)
 
 def get_allocation():
   return copy.deepcopy(_allocation)
@@ -59,3 +64,48 @@ def set_credentials(topology):
           value = split[1].strip()
           logging.debug('set envvar ' + key)
           os.environ[key] = value
+
+def set_vm_capacity(capacity):
+  with lock:
+    global _allocation, _topology
+    allocation = _allocation
+    topology = _topology
+    start = time.time()
+    vm_cpu = topology['infrastructure']['cpu_cores']
+    vm_mem = topology['infrastructure']['mem_units']
+    autoscaling_group = topology['infrastructure']['cloud_driver']['autoscaling_groupname']
+    logging.info('New capacity={}; aws group={}'.format(capacity, autoscaling_group))
+    vms = aws_driver.start_virtual_machines(autoscaling_group, capacity)
+    finish = time.time()
+
+    i = 0
+    for vm_name in allocation.keys():
+      found = False
+      for name, ip in vms:
+        if vm_name == name:
+          found = True
+      if not found:
+        del allocation[vm_name]
+
+    for vm_name, ip_addr in vms:
+      success = False
+      while not success:
+        try:
+          r = requests.put('http://{}:8000/api/topology'.format(ip_addr), json=topology, timeout=10)
+          success = True
+        except Exception as e:
+          print e
+          sleep_time = 10
+          logging.info('VM is not ready;sleep {}s before setting topology;'.format(sleep_time))
+          time.sleep(sleep_time)
+      logging.debug('Set topology: {}'.format(r.text))
+      allocation[vm_name] = {}
+      allocation[vm_name]['ip'] = ip_addr
+      allocation[vm_name]['cpu_cores'] = vm_cpu
+      allocation[vm_name]['mem_units'] = vm_mem
+      allocation[vm_name]['used'] = []
+
+    finish = time.time()
+
+
+    

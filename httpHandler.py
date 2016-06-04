@@ -46,9 +46,12 @@ class HttpHandler(BaseHTTPRequestHandler):
       post_data_string = self.rfile.read(int(self.headers['Content-Length']))
       logging.debug('POST data ' + post_data_string)
       data = json.loads(post_data_string)
+      response = {}
       if self.path.startswith('/api/topology'):
         topology.set_topology(data)
-        response = {}
+      elif self.path.startswith('/api/vm/capacity'):
+        capacity = data['capacity']
+        topology.set_vm_capacity(capacity)
       else:
         self.send_error(404)
         return
