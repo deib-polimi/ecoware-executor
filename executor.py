@@ -158,5 +158,5 @@ def threaded_run_action(action, vm_name_dict, topology, new_allocation, prev_all
       'new_allocation': result_allocation
     }
     url = 'http://{}:8000/api/run/tier_hook'.format(ip)
-    r = requests.delete(url, data=json.dumps(data), timeout=60)
+    r = requests.post(url, data=json.dumps(data), timeout=60)
   logging.debug('-- End run action: {}'.format(action.__str__()))
