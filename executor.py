@@ -95,10 +95,10 @@ def threaded_run_action(action, topology, new_allocation, prev_allocation):
     data = {
       'tier': action.container,
       'old_allocation': prev_allocation,
-      'new_allocation': result_allocation
+      'new_allocation': new_allocation
     }
     url = 'http://{}:8000/api/run/tier_hook'.format(ip)
-    r = requests.delete(url, data=json.dumps(data), timeout=60)
+    r = requests.post(url, data=json.dumps(data), timeout=60)
     resp_json = json.loads(r.text)
     if 'error' in resp_json:
       logging.error('action={}; resp_json={}'.format(str(action), resp_json['error']))

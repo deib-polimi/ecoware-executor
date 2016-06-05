@@ -26,6 +26,8 @@ class HttpHandler(BaseHTTPRequestHandler):
         response = topology.inspect()
       elif self.path.startswith('/api/topology'):
         response = topology.get_topology()
+      elif self.path.startswith('/api/messages'):
+        response = topology.get_messages()
       else:
         self.send_error(404)
         return
