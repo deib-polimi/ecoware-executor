@@ -10,6 +10,8 @@ import threading
 from sets import Set
 
 import aws_driver
+import executor
+from action import action_type, ContainerAction
 
 _allocation = {}
 _topology = {}
@@ -103,9 +105,58 @@ def set_vm_capacity(capacity):
       allocation[vm_name]['ip'] = ip_addr
       allocation[vm_name]['cpu_cores'] = vm_cpu
       allocation[vm_name]['mem_units'] = vm_mem
-      allocation[vm_name]['used'] = []
+      allocation[vm_name]['used'] = {}
 
     finish = time.time()
 
+def set_tier(data):
+  global _allocation
+  allocation = _allocation
+  topology = _topology
+  vm_name = data['vm']
+  app = data['app']
+  name = data['name']
+  container_name = app + '_' + name
+  cpu_cores = data['cpu_cores']
+  mem_units = data['mem_units']
+  ip = None
+  is_new = True
+  for name, vm in allocation.iteritems():
+    if not is_new:
+      break
+    if name == vm_name:
+      ip = vm['ip']
+      for tier_name in vm['used'].keys():
+        tier = vm['used'][tier_name]
+        if tier_name == container_name:
+          if tier['cpu_cores'] == cpu_cores and tier['mem_units'] == mem_units:
+            return
+          else:
+            is_new = False
+            break
+  if is_new:
+    my_action_type = action_type['create_container']
+  elif cpu_cores == 0 or mem_units == 0:
+    my_action_type = action_type['delete_container']
+  else:
+    my_action_type = action_type['update_container']
+  action = ContainerAction(my_action_type, vm_name, container_name, cpu_cores, mem_units)
+  logging.debug('Action {}'.format(action))
 
-    
+  new_allocation = copy.deepcopy(_allocation)
+  if not container_name in new_allocation[vm_name]['used']:
+    new_allocation[vm_name]['used'][container_name] = {}
+  if cpu_cores != 0 and mem_units != 0:
+    new_allocation[vm_name]['used'][container_name]['cpu_cores'] = cpu_cores
+    new_allocation[vm_name]['used'][container_name]['mem_units'] = mem_units
+  else:
+    del new_allocation[vm_name]['used'][container_name]
+
+  tiers = [container_name]
+  url = 'http://{}:8000/api/cpuset/release'.format(ip)
+  r = requests.put(url, data=json.dumps(tiers), timeout=10)
+  logging.debug('Release cpuset on {} for tiers {}; response={}'.format(ip, tiers, r.text))
+
+  actions = [[action]]
+  executor.aws_execute(actions, new_allocation, topology, allocation)
+  _allocation = new_allocation

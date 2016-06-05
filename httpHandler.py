@@ -52,6 +52,8 @@ class HttpHandler(BaseHTTPRequestHandler):
       elif self.path.startswith('/api/vm/capacity'):
         capacity = data['capacity']
         topology.set_vm_capacity(capacity)
+      elif self.path.startswith('/api/tier'):
+        topology.set_tier(data)
       else:
         self.send_error(404)
         return
