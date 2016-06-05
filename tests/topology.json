@@ -16,7 +16,7 @@
 				"max_node": 1,
 				"docker_image": "nginx",
 				"depends_on": ["app_server"],
-				"on_dependency_scale": "reload_server_pool.sh",
+				"on_dependency_scale": "reload_server_pool.sh"
 			}, "app_server": {
 				"name": "Application Logic Tier",
 				"docker_image": "nginx",
