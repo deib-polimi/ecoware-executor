@@ -4,7 +4,6 @@
 			"autoscaling_groupname": "monolithic-ex-2cpu",
 			"credentials": "/ecoware/credentials.conf"
 		},
-		"max_vms": 10,
 		"hooks_git_repo": "https://github.com/n43jl/hooks",
 		"cpu_cores": 2,
 		"mem_units": 8
@@ -17,8 +16,7 @@
 				"max_node": 1,
 				"docker_image": "nginx",
 				"depends_on": ["app_server"],
-				"on_dependency_scale": "reload_server_pool.sh",
-				"max_rt": 0.1
+				"on_dependency_scale": "reload_server_pool.sh"
 			}, "app_server": {
 				"name": "Application Logic Tier",
 				"docker_image": "nginx",
@@ -31,7 +29,6 @@
 				"max_node": 1,
 				"docker_image": "nginx",
 				"on_node_scale": "mysql_hook.sh",
-				"max_rt": 0.2,
 				"ports": ["8081:80"]
 			}
 
@@ -48,7 +45,6 @@
 				"max_node": 1,
 				"docker_image": "hello-world",
 				"on_node_scale": "mysql_hook.sh",
-				"max_rt": 0.2,
 				"ports": ["3307:3306"]
 			}
 		}

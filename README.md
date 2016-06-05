@@ -1,4 +1,4 @@
-# Executor
+# Monolithic Executor
 
 ## Dependencies
 ```
@@ -13,9 +13,12 @@ python setup.py install
 ```
 
 ## AWS credentials
-
-Add credentials to aws_driver.py:
-`os.environ["AWS_SECRET_ACCESS_KEY"] = ""`
+Location to the credentials is configured in topology: topology.infrastructure.cloud_driver.credentials.
+The file format is:
+```
+AWS_ACCESS_KEY_ID=AAA
+AWS_SECRET_ACCESS_KEY=bbbb
+```
 
 ## API
 ```
@@ -23,7 +26,7 @@ Add credentials to aws_driver.py:
   [GET]    /api/inspect
   [GET]    /api/topology
   [PUT]    /api/topology
-  [PUT]    /api/emulate
+  [PUT]    /api/translate
   [PUT]    /api/execute
 ```
 ## API Description
@@ -31,53 +34,91 @@ Add credentials to aws_driver.py:
 Example of input payload:
 ```
 {
-  "cpu_cores": 8,
-  "mem_units": 64,
-  "auto_scaling_group": "monolithic-ex-8cpu",
-  "hooks_git": "https://github.com/n43jl/hooks",
-  "tiers": [
-    {
-      "name": "pwitter-web",
-      "image": "pwitter-web",
-      "docker_params": "-p 8080:5000 --add-host=\"db:172.31.31.123\"",
-      "entrypoint_params": "-w 3 -k eventlet",
-      "tier_hooks": ["test_tier_hook.sh"],
-      "depends_on": ["rubiss-jboss"],
-      "scale_hooks": ["test_scale_hook.sh"]
-    }, {
-      "name": "rubis-jboss",
-      "image": "polimi/rubis-jboss:nosensors",
-      "docker_params": "-p 80:8080 --add-host=\"db:172.31.31.123\"",
-      "entrypoint_params": " /opt/jboss-4.2.2.GA/bin/run.sh --host=0.0.0.0 --bootdir=/opt/rubis/rubis-cvs-2008-02-25/Servlets_Hibernate -c default"
+  "infrastructure": {
+    "cloud_driver": {
+      "autoscaling_groupname": "monolithic-ex-2cpu",
+      "credentials": "/ecoware/credentials.conf"
+    },
+    "hooks_git_repo": "https://github.com/n43jl/hooks",
+    "cpu_cores": 2,
+    "mem_units": 8
+  },
+  "apps": [{
+    "name": "rubis",
+    "tiers": {
+      "loadbalancer": {
+        "name": "Front LoadBalancer",
+        "max_node": 1,
+        "docker_image": "nginx",
+        "depends_on": ["app_server"],
+        "on_dependency_scale": "reload_server_pool.sh"
+      }, "app_server": {
+        "name": "Application Logic Tier",
+        "docker_image": "nginx",
+        "depends_on": ["db"],
+        "on_node_scale": "jboss_hook.sh",
+        "on_dependency_scale": "test_tier_hook.sh",
+        "ports": ["8080:80"]
+      }, "db": {
+        "name": "Data Tier",
+        "max_node": 1,
+        "docker_image": "nginx",
+        "on_node_scale": "mysql_hook.sh",
+        "ports": ["8081:80"]
+      }
+
     }
-  ]
-} 
+  }, {
+    "name": "pwitter",
+    "tiers": {
+      "app_server": {
+        "name": "Application Logic Tier",
+        "docker_image": "nginx",
+        "ports": ["8082:80"]
+      }, "db": {
+        "name": "Data Tier",
+        "max_node": 1,
+        "docker_image": "hello-world",
+        "on_node_scale": "mysql_hook.sh",
+        "ports": ["3307:3306"]
+      }
+    }
+  }]
+}
 ```
+`curl -X PUT -d @tests/topology.json localhost:8000/api/topology`
+
 Hooks git repository should contain 2 folders: `scale_hooks` and `tier_hooks` with executable hooks inside.
 
-### [PUT] /api/emulate
+### [PUT] /api/translate
 Translates plan to the list of actions, without executing them. Example payload:
 ```
 {
-  "rubis-jboss": {
-    "cpu_cores": 7,
-    "mem_units": 1
-  }, "pwitter-web": {
-    "cpu_cores": 1,
-    "mem_units": 1
-  }
+    "rubis": {
+        "db": {
+            "cpu_cores": 7,
+            "mem_units": 1
+        }, "app_server": {
+            "cpu_cores": 1,
+            "mem_units": 1
+        }
+    }
 }
 ```
+`curl -X PUT -d @tests/plan.json localhost:8000/api/translate`
 ### [PUT] /api/execute
 Executes the plan by deleting, creating and updating containers. Example payload:
 ```
 {
-  "rubis-jboss": {
-    "cpu_cores": 7,
-    "mem_units": 1
-  }, "pwitter-web": {
-    "cpu_cores": 1,
-    "mem_units": 1
-  }
+    "rubis": {
+        "db": {
+            "cpu_cores": 7,
+            "mem_units": 1
+        }, "app_server": {
+            "cpu_cores": 1,
+            "mem_units": 1
+        }
+    }
 }
 ```
+`curl -X PUT -d @tests/plan.json localhost:8000/api/execute`

@@ -75,7 +75,6 @@ def set_topology(topology):
     ip_addr = _allocation[vm_name]['ip']
     url = 'http://{}:8000/api/topology'.format(ip_addr)
     r = requests.put(url, data=json.dumps(topology), timeout=1)
-    logging.debug('url={}; payload={}; result={}'.format(url, payload, r.text))
   logging.debug('Set topology is done')
   set_credentials(topology)
 
